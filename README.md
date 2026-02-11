@@ -188,7 +188,7 @@ class UserNFT(Base):
 
 1. **Клонирование репозитория**
 ```bash
-git clone https://github.com/your-username/SpaceHunter.git
+git clone https://github.com/DedovInside/SpaceHunter
 cd SpaceHunter
 ```
 
