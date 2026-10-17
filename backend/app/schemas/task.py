@@ -10,6 +10,9 @@ class TaskBase(BaseModel):
     reward: int
     type: str
     condition_type: str
+    reward_type: str = "token"
+    multiplier_pct: float = 0
+    link_url: Optional[str] = None
 
 
 class TaskCreate(TaskBase):
@@ -40,3 +43,6 @@ class TaskClaimResponse(BaseModel):
     new_balance: Optional[int] = None
     task_id: Optional[int] = None
     error: Optional[str] = None
+    reward_type: Optional[str] = None
+    multiplier_pct: Optional[float] = None
+    task_boost_pct: Optional[float] = None

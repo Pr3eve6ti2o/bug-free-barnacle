@@ -1,10 +1,15 @@
 from datetime import date, timedelta
+from sqlalchemy import update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.models.user import User
 from app.models.daily_bonus import DailyBonus, UserDailyBonus
-from app.models.game_state import GameState 
+from app.models.daily_game_state import DailyGameState
+from app.models.game_state import GameState
+from app.models.p2e import DailyClaim
+from app.services.p2e import get_streak_info, award_streak_milestones
 
 
 async def claim_daily_bonus(telegram_id: int, db: AsyncSession):
@@ -26,7 +31,25 @@ async def claim_daily_bonus(telegram_id: int, db: AsyncSession):
     if not bonus_data:
         bonus_data = UserDailyBonus(user_id=user.id, current_day=1, last_claimed_date=today - timedelta(days=1))
         db.add(bonus_data)
-        await db.flush()
+        try:
+            await db.flush()
+        except IntegrityError:
+            # A concurrent first claim created the row first. Rollback
+            # expires every loaded object, so reload both rows fresh and
+            # let the normal guards below resolve the race.
+            await db.rollback()
+            user = (await db.execute(
+                select(User)
+                .options(selectinload(User.game_state), selectinload(User.daily_bonus), selectinload(User.daily_game_state))
+                .where(User.telegram_id == telegram_id)
+            )).scalar_one_or_none()
+            if user is None:
+                return {"error": "User not found"}
+            bonus_data = (await db.execute(
+                select(UserDailyBonus).where(UserDailyBonus.user_id == user.id)
+            )).scalar_one_or_none()
+            if bonus_data is None:
+                return {"error": "Bonus state unavailable, retry"}
 
     # 3. Проверка на пропущенный день или что уже забирал бонус
     if bonus_data.last_claimed_date and (today - bonus_data.last_claimed_date).days > 1:
@@ -45,12 +68,44 @@ async def claim_daily_bonus(telegram_id: int, db: AsyncSession):
     if not daily_bonus:
         return {"error": "Bonus config not found"}
 
-    # 5. Выдаём бонус
-    if daily_bonus.reward_type == "coins":
-        game_state = user.game_state
-        game_state.balance += daily_bonus.reward_amount
+    # 4b. Claim the day FIRST — the DailyClaim row is the gate, not a
+    # receipt. Inserting it before any credit closes the window where a
+    # competitor's committed row made the old code skip the insert and pay
+    # anyway (double credit), and the flush sits inside the try so a lost
+    # race resolves to "already claimed", never a 500.
+    existing_claim = (await db.execute(
+        select(DailyClaim).where(DailyClaim.user_id == user.id, DailyClaim.claim_date == today)
+    )).scalar_one_or_none()
+    if existing_claim:
+        return {
+            "error": "Already claimed today",
+            "current_day": bonus_data.current_day,
+            "can_claim": False
+        }
+    db.add(DailyClaim(user_id=user.id, claim_date=today))
+    try:
+        await db.flush()
+    except IntegrityError:
+        await db.rollback()
+        return {
+            "error": "Already claimed today",
+            "current_day": bonus_data.current_day,
+            "can_claim": False
+        }
 
-        user.daily_game_state.balance += daily_bonus.reward_amount  # Обновляем баланс в DailyGameState
+    # 5. Выдаём бонус (atomic SQL-side credits — an ORM += can overwrite a
+    # concurrent credit landing in the same instant)
+    if daily_bonus.reward_type == "coins":
+        amt = daily_bonus.reward_amount
+        await db.execute(
+            update(GameState).where(GameState.user_id == user.id)
+            .values(balance=GameState.balance + amt)
+        )
+        await db.execute(
+            update(DailyGameState).where(DailyGameState.user_id == user.id)
+            .values(balance=DailyGameState.balance + amt)
+        )
+        await db.refresh(user.game_state)
         
     elif daily_bonus.reward_type == "nft":
         # TODO: логика выдачи nft
@@ -61,7 +116,22 @@ async def claim_daily_bonus(telegram_id: int, db: AsyncSession):
     bonus_data.last_claimed_date = today
     bonus_data.current_day = 1 if bonus_data.current_day >= 10 else bonus_data.current_day + 1
 
-    await db.commit()
+    # 7. Стрик: строка клейма уже вставлена на шаге 4b — считаем стрик и
+    # выдаём майлстоуны
+    streak_info = await get_streak_info(db, user.id)
+    streak_awards = await award_streak_milestones(db, user, streak_info["streak"])
+
+    try:
+        await db.commit()
+    except IntegrityError:
+        # DailyClaim UNIQUE(user, date): a parallel claim won; this whole
+        # transaction (including the balance credit above) rolls back.
+        await db.rollback()
+        return {
+            "error": "Already claimed today",
+            "current_day": bonus_data.current_day,
+            "can_claim": False
+        }
     return {
         "success": True,
         "message": f"Bonus for day {daily_bonus.day_number} claimed!",
@@ -71,5 +141,7 @@ async def claim_daily_bonus(telegram_id: int, db: AsyncSession):
         "next_day": bonus_data.current_day,  # следующий доступный день
         "can_claim": False,
         "last_claimed_date": today.isoformat(),
-        "new_balance": user.game_state.balance if daily_bonus.reward_type == "coins" else None
+        "new_balance": user.game_state.balance if daily_bonus.reward_type == "coins" else None,
+        "streak": streak_info["streak"],
+        "streak_awards": streak_awards,
     }

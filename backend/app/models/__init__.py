@@ -9,3 +9,4 @@ from app.models.user_tasks import UserTask
 from app.models.daily_bonus import DailyBonus
 from app.models.daily_bonus import UserDailyBonus
 from app.models.nft import NFT, NFTCategory, UserNFT
+from app.models.p2e import MiningSession, DailyClaim, PromoCode, PromoRedemption, WithdrawalRequest, ReferralEarning

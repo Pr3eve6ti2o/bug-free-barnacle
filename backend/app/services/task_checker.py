@@ -1,4 +1,6 @@
 from datetime import date, datetime, time
+from sqlalchemy import case, func, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -7,6 +9,7 @@ from app.models.task import Task
 from app.models.daily_game_state import DailyGameState
 from app.models.game_state import GameState
 from app.models.user import User
+from app.models.p2e import MiningSession, BotStart
 
 
 async def check_daily_reset(db: AsyncSession, user_id: int) -> bool:
@@ -83,9 +86,31 @@ async def check_task_progress(db: AsyncSession, user_id: int):
         .filter(User.id == user_id)
     )
     user = user_result.scalar_one_or_none()
-    
+
     if not user or not user.game_state:
         return []
+
+    # Гарантируем, что у пользователя есть строки по всем заданиям
+    # (иначе проверка прогресса зависит от порядка вызовов API)
+    all_tasks = (await db.execute(select(Task))).scalars().all()
+    existing_task_ids = {ut.task_id for ut in user.tasks}
+    for task in all_tasks:
+        if task.id not in existing_task_ids:
+            new_ut = UserTask(
+                user_id=user.id,
+                task_id=task.id,
+                progress=0,
+                is_completed=False,
+                is_claimed=False,
+            )
+            try:
+                async with db.begin_nested():
+                    db.add(new_ut)
+                    await db.flush()
+                user.tasks.append(new_ut)
+            except IntegrityError:
+                pass  # a parallel check created the row first (ux_user_task)
+    await db.flush()
     
     # Убедимся, что у пользователя есть daily_game_state
     daily_state = user.daily_game_state
@@ -100,6 +125,31 @@ async def check_task_progress(db: AsyncSession, user_id: int):
         db.add(daily_state)
         await db.flush()
     
+    # Метрики для постоянных заданий: считаются один раз из реальных данных
+    async def _count(stmt):
+        return (await db.execute(stmt)).scalar() or 0
+
+    metrics = {
+        "level": user.game_state.level or 0,
+        "passive_income": user.game_state.passive_income or 0,
+        "balance": user.game_state.balance or 0,
+        "mining_sessions": await _count(
+            select(func.count(MiningSession.id)).filter(MiningSession.user_id == user.id)
+        ),
+        "mining_claims": await _count(
+            select(func.count(MiningSession.id)).filter(
+                MiningSession.user_id == user.id, MiningSession.claimed == True  # noqa: E712
+            )
+        ),
+        "referrals": await _count(
+            select(func.count(User.id)).filter(User.referred_by_id == user.id)
+        ),
+        "bot_started": await _count(
+            select(func.count(BotStart.telegram_id)).filter(BotStart.telegram_id == user.telegram_id)
+        ),
+        "wallet_connected": 1 if user.ton_wallet_address else 0,
+    }
+
     # Получаем все задания пользователя
     completed_tasks = []
     
@@ -131,21 +181,14 @@ async def check_task_progress(db: AsyncSession, user_id: int):
                 user_task.completed_at = datetime.now()
                 completed_tasks.append(user_task)
             
-        # Для глобальных заданий проверяем состояние в game_state
+        # Для глобальных заданий проверяем состояние в game_state и метрики
         elif task.type == "permanent":
-            if task.condition_type in ["level", "passive_income", "balance"]:
-                # Определяем текущее значение
-                current_value = 0
-                if task.condition_type == "level":
-                    current_value = user.game_state.level
-                elif task.condition_type == "passive_income":
-                    current_value = user.game_state.passive_income
-                elif task.condition_type == "balance":
-                    current_value = user.game_state.balance
-                
+            if task.condition_type in metrics:
+                current_value = metrics[task.condition_type]
+
                 # Устанавливаем прогресс на текущее значение
                 user_task.progress = current_value
-                
+
                 # Проверяем выполнение
                 if current_value >= task.condition_value and not user_task.is_completed:
                     user_task.is_completed = True
@@ -186,19 +229,64 @@ async def claim_task_reward(db: AsyncSession, user_telegram_id: int, user_task_i
     
     if not user_task:
         return {"success": False, "error": "Task not found or already claimed"}
-    
-    # Начисляем награду
-    reward = user_task.task.reward
-    user.game_state.balance += reward
-    
-    # Отмечаем, что награда получена
+
+    # Atomic claim gate: exactly one concurrent claim flips the flag, and
+    # the completion predicate is re-checked inside the same UPDATE — a
+    # daily reset landing between the SELECT above and this gate cannot
+    # resurrect a claim on an un-completed task.
+    gate = await db.execute(
+        update(UserTask)
+        .where(UserTask.id == user_task.id, UserTask.is_claimed.is_(False),
+               UserTask.is_completed.is_(True))
+        .values(is_claimed=True)
+    )
+    if gate.rowcount != 1:
+        await db.rollback()
+        return {"success": False, "error": "Task not found or already claimed"}
     user_task.is_claimed = True
-    
+
+    # Начисляем награду: токены на баланс или +% к скорости майнинга
+    task = user_task.task
+    if getattr(task, "reward_type", "token") == "multiplier":
+        pct = float(task.multiplier_pct or 0)
+        current = float(user.game_state.task_boost_pct or 0)
+        # SQL-side clamped increment (total task boost capped at +100%):
+        # an ORM read-modify-write here lost one of two concurrent claims.
+        boosted = func.coalesce(GameState.task_boost_pct, 0) + pct
+        await db.execute(
+            update(GameState)
+            .where(GameState.user_id == user.id)
+            .values(task_boost_pct=case((boosted > 100.0, 100.0), else_=boosted))
+        )
+        await db.refresh(user.game_state)
+        new_total = float(user.game_state.task_boost_pct or 0)
+        await db.commit()
+        return {
+            "success": True,
+            "reward": 0,
+            "reward_type": "multiplier",
+            "multiplier_pct": new_total - current,
+            "task_boost_pct": new_total,
+            "new_balance": user.game_state.balance,
+            "task_id": user_task.id,
+        }
+
+    reward = task.reward
+    # Atomic SQL-side credit: an ORM += here could overwrite a concurrent
+    # credit (mining claim, welcome) landing in the same instant.
+    await db.execute(
+        update(GameState)
+        .where(GameState.user_id == user.id)
+        .values(balance=GameState.balance + reward)
+    )
+    await db.refresh(user.game_state)
+
     await db.commit()
-    
+
     return {
         "success": True,
         "reward": reward,
+        "reward_type": "token",
         "new_balance": user.game_state.balance,
         "task_id": user_task.id
     }

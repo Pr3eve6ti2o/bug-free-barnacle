@@ -3,8 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
 from app.database import get_db
 from app.services.bonus import claim_daily_bonus
+from app.services.p2e import get_streak_info, credit_user, WELCOME_REWARD, econ_int
 from app.models.daily_bonus import DailyBonus, UserDailyBonus
+from app.models.game_state import GameState
 from sqlalchemy.future import select
+from sqlalchemy import update
+from sqlalchemy.orm import selectinload
 from app.models.user import User
 
 router = APIRouter(prefix="/bonus", tags=["Bonus"])
@@ -26,13 +30,15 @@ async def get_daily_bonus_status(telegram_id: int, db: AsyncSession = Depends(ge
 
     today = date.today()
     if not bonus_data:
+        streak_info = await get_streak_info(db, user.id)
         return {
             "current_day": 1,
             "can_claim": True,
             "next_claim": None,
-            "days_streak": 0
+            "days_streak": 0,
+            **streak_info,
         }
-    
+
     # Проверяем сброс прогресса
     if bonus_data.last_claimed_date:
         days_diff = (today - bonus_data.last_claimed_date).days
@@ -47,12 +53,14 @@ async def get_daily_bonus_status(telegram_id: int, db: AsyncSession = Depends(ge
 
     # Проверяем, можно ли забрать бонус сегодня
     can_claim = not bonus_data.last_claimed_date or bonus_data.last_claimed_date < today
-    
+
+    streak_info = await get_streak_info(db, user.id)
     return {
         "current_day": bonus_data.current_day,
         "can_claim": can_claim,
         "last_claimed": bonus_data.last_claimed_date.isoformat() if bonus_data.last_claimed_date else None,
-        "days_streak": bonus_data.current_day - 1
+        "days_streak": bonus_data.current_day - 1,
+        **streak_info,
     }
 
 @router.post("/daily/claim/{telegram_id}")
@@ -76,3 +84,35 @@ async def get_daily_bonus_config(db: AsyncSession = Depends(get_db)):
         "type": bonus.reward_type,
         "amount": bonus.reward_amount
     } for bonus in bonuses]
+@router.post("/welcome/{telegram_id}")
+async def claim_welcome_bonus(telegram_id: int, db: AsyncSession = Depends(get_db)):
+    """One-time welcome bonus (idempotent)."""
+    result = await db.execute(
+        select(User).options(selectinload(User.game_state)).where(User.telegram_id == telegram_id)
+    )
+    user = result.scalar_one_or_none()
+    if not user or not user.game_state:
+        raise HTTPException(status_code=404, detail="User not found")
+    uid = user.id  # plain int: the ORM object expires on rollback
+    # Atomic one-time gate: parallel claims flip the flag exactly once.
+    gate = await db.execute(
+        update(User)
+        .where(User.id == user.id, User.welcome_claimed.is_(False))
+        .values(welcome_claimed=True)
+    )
+    if gate.rowcount != 1:
+        await db.rollback()
+        # Fresh session for the read-back: this session's state after a
+        # contended UPDATE + rollback is not reliable for ORM work, and the
+        # ORM user object is expired — use the plain int captured earlier.
+        from app.database import AsyncSessionLocal
+        async with AsyncSessionLocal() as db2:
+            fresh = (await db2.execute(
+                select(GameState.balance).where(GameState.user_id == uid)
+            )).scalar_one_or_none()
+        return {"already_claimed": True, "new_balance": int(fresh or 0)}
+    user.welcome_claimed = True
+    reward = await econ_int(db, "econ_welcome_reward", WELCOME_REWARD)
+    credited = await credit_user(db, user, reward)
+    await db.commit()
+    return {"reward": credited, "new_balance": user.game_state.balance}

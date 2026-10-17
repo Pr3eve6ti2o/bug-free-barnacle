@@ -7,6 +7,7 @@ import { BrowserRouter, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader/PageHeader.tsx';
 import { NavigationBar } from '@/components/NavigationBar/NavigationBar.tsx';
 import { Spinner } from '@/components/Spinner/Spinner.tsx';
+import { Starfield } from '@/components/Starfield/Starfield.tsx';
 import { AppRouter } from "@/navigation/AppRouter.tsx";
 import { authService, setLaunchParams } from '@/services/auth';
 
@@ -67,6 +68,8 @@ export function App() {
         platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
       >
         <AuthWrapper>
+          <Starfield />
+          <div className="sh-nebula" aria-hidden />
           <PageHeader />
           <AppRouter />
           <NavigationBar />

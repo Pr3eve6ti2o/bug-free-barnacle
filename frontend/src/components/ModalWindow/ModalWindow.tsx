@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+import { X } from 'lucide-react';
 import './ModalWindow.css';
 
 interface ModalProps {
@@ -7,9 +8,10 @@ interface ModalProps {
     title: string;
     children: React.ReactNode;
     icon?: string;
+    dismissible?: boolean;
 }
 
-export const ModalWindow: FC<ModalProps> = ({isOpen, onClose, title, children, icon}: ModalProps) => {
+export const ModalWindow: FC<ModalProps> = ({isOpen, onClose, title, children, icon, dismissible = true}: ModalProps) => {
     if (!isOpen) {
         return null;
     }
@@ -24,12 +26,15 @@ export const ModalWindow: FC<ModalProps> = ({isOpen, onClose, title, children, i
                             {title.includes('\n') ? title : title.replace(' ', '\n')}
                         </h2>
                     </div>
+                    {dismissible && (
                     <button
                         onClick={onClose}
                         className="modal-close-button"
+                        aria-label="Close"
                     >
-                        X
+                        <X size={16} strokeWidth={2} />
                     </button>
+                    )}
                 </div>
                 <div className="modal-content">
                     {children}

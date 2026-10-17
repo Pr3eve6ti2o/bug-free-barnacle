@@ -1,15 +1,20 @@
-import { FC, useEffect, useState, useRef } from 'react';
+import { FC, useCallback, useEffect, useState, useRef } from 'react';
 import { Wallet } from 'lucide-react';
 import { Page } from '@/components/Page.tsx';
 import { gameApi, walletApi } from '@/services/api';
+import { WithdrawCard } from '@/components/WithdrawCard/WithdrawCard';
+import { DropEventCard } from '@/components/DropEventCard/DropEventCard';
 import { TonConnectButton, useTonWallet, useTonConnectUI } from '@tonconnect/ui-react';
 import { toUserFriendlyAddress } from '@tonconnect/sdk';
 import TONCoinPixel from '../../../assets/TON_Coin_Pixel.png';
 import './DropPage.css';
+import '@/components/p2e.css';
+import { useTelegramUserId } from '@/hooks/useTelegramUser';
 
 export const DropPage: FC = () => {
-  const [balance, setBalance] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [isBalanceLoading, setIsBalanceLoading] = useState(true);
+  const [balanceError, setBalanceError] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
 
@@ -17,7 +22,7 @@ export const DropPage: FC = () => {
   const wallet = useTonWallet();
   const tonConnectRef = useRef<HTMLDivElement>(null);
 
-  const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 99281932;
+  const userId = useTelegramUserId() as number;
 
   // Начальная проверка состояния кошелька
   useEffect(() => {
@@ -94,24 +99,26 @@ export const DropPage: FC = () => {
     return () => { unsubscribe(); };
   }, [tonConnectUI, userId]);
 
-  // Загрузка баланса
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const state = await gameApi.getGameState(userId);
-        setBalance(state.balance);
-      } catch (error) {
-        console.error('Error fetching balance:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
+  // Баланс: последний успешный ответ сохраняется, ошибка его не обнуляет
+  const fetchBalance = useCallback(async () => {
+    try {
+      setIsBalanceLoading(true);
+      const state = await gameApi.getGameState(userId);
+      setBalance(state.balance);
+      setBalanceError(false);
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      setBalanceError(true);
+    } finally {
+      setIsBalanceLoading(false);
+    }
   }, [userId]);
+
+  useEffect(() => {
+    fetchBalance();
+    const interval = setInterval(fetchBalance, 10000);
+    return () => clearInterval(interval);
+  }, [fetchBalance]);
 
 
   const connectWallet = async () => {
@@ -146,41 +153,74 @@ export const DropPage: FC = () => {
     <Page back={false}>
       <div className="drop-page-container">
         <div className="coins-container">
-          <div className="balance-title">YOUR BALANCE</div>
-          <div className="balance-value-container">
-            <div className="coins-amount">
-              {isLoading ? 'Loading...' : `${balance.toFixed(0)} CSM`}
-            </div>
+          <div className="sh-label balance-title">Balance</div>
+          <div className="coins-amount tnum">
+            {balance === null ? '—' : balance.toFixed(0)}
+            {balance !== null && <span className="coins-unit">CSM</span>}
           </div>
+          {balanceError && (
+            <button className="balance-retry" onClick={fetchBalance} disabled={isBalanceLoading}>
+              Retry
+            </button>
+          )}
         </div>
 
+        <DropEventCard userId={Number(userId)} onClaimed={(b) => setBalance(b)} />
+
         <img src={TONCoinPixel} alt="TON Coin" className="ton-coin-image" />
+
+        <p className="drop-hint">Connect your TON wallet to prepare for the token drop.</p>
 
         <div className="hidden-ton-connect" ref={tonConnectRef}>
           <TonConnectButton />
         </div>
 
-        {isWalletConnected && walletAddress ? (
+        {wallet && walletAddress ? (
           <div className="connected-wallet-container">
             <div className="wallet-info">
-              <p className="wallet-address" onClick={copyWalletAddress}>
+              <span className="wallet-status-dot" />
+              <p className="wallet-address tnum" onClick={copyWalletAddress} title="Tap to copy">
                 {`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
               </p>
-              <p className="wallet-connected-text">Wallet Connected</p>
+              <p className="wallet-connected-text">Wallet connected</p>
             </div>
-            <button className="connect-wallet-button" onClick={disconnectWallet}>
+            <button className="connect-wallet-button ghost" onClick={disconnectWallet}>
               <Wallet className="wallet-icon" />
-              <span className="wallet-button-text">Disconnect Wallet</span>
+              <span className="wallet-button-text">Disconnect</span>
+            </button>
+          </div>
+        ) : isWalletConnected && walletAddress ? (
+          <div className="connected-wallet-container">
+            <div className="wallet-info">
+              <span
+                className="wallet-status-dot"
+                style={{ background: 'rgba(138, 143, 156, 0.6)', boxShadow: 'none' }}
+              />
+              <p className="wallet-address tnum" onClick={copyWalletAddress} title="Tap to copy">
+                {`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
+              </p>
+              <p className="wallet-connected-text">Wallet linked — reconnect to withdraw</p>
+            </div>
+            <button className="connect-wallet-button" onClick={connectWallet}>
+              <Wallet className="wallet-icon" />
+              <span className="wallet-button-text">Reconnect</span>
             </button>
           </div>
         ) : (
           <div className="wallet-button-container">
             <button className="connect-wallet-button" onClick={connectWallet}>
               <Wallet className="wallet-icon" />
-              <span className="wallet-button-text">Connect TON Wallet</span>
+              <span className="wallet-button-text">Connect TON wallet</span>
             </button>
           </div>
         )}
+
+        <div style={{ height: 16 }} />
+        <WithdrawCard
+          telegramId={userId}
+          balance={balance === null ? -1 : balance}
+          onRequested={(newBalance) => setBalance(newBalance)}
+        />
       </div>
     </Page>
   );

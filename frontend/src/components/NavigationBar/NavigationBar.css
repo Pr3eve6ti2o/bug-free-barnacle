@@ -1,19 +1,17 @@
 .navbar {
-  background-color: #2C1B52;
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 500px;
-  height: 4rem;
-  border-radius: 1rem;
-  border: 2px solid black;
+  left: 0;
+  right: 0;
+  z-index: 40;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-around;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  padding: 10px 6px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(6, 7, 12, 0.84);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--sh-border);
 }
 
 .navbar-button {
@@ -21,29 +19,33 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem; /* 1 * 0.25rem */
-  padding: 0.5rem; /* 2 * 0.25rem */
-  width: 3.75rem; /* 15 * 0.25rem */
-  height: 3.75rem; /* 15 * 0.25rem */
-  border-radius: 1rem; /* 16 * 0.25rem */
-}
-
-.navbar-button.active {
-  background-color: #1F0735;
-  color: white;
-  border: 2px solid black;
-}
-
-.navbar-button.inactive {
-  background-color: #2C1B52;
-  color: white;
+  gap: 4px;
+  padding: 4px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sh-faint);
+  transition: color 0.18s ease;
+  min-width: 0;
 }
 
 .navbar-button span {
-  font-size: 0.6rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
-.navbar-button img {
-  width: 2.5rem;
-  height: 2.5rem;
+.navbar-button:active {
+  transform: scale(0.94);
+}
+
+/* Active state is accent colour only — no background pill */
+.navbar-button.active {
+  color: var(--sh-accent);
+}
+
+.navbar-button.inactive:hover {
+  color: var(--sh-dim);
 }

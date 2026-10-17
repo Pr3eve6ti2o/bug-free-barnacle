@@ -53,7 +53,9 @@ async def create_user_with_referral(db: AsyncSession, user_data: UserReferralCre
     new_user = User(
         telegram_id=user_data.telegram_id,
         username=user_data.username,
-        referred_by_id=ref_user.id if ref_user else None
+        referred_by_id=ref_user.id if ref_user else None,
+        # Escrowed invite bonus (ATF-style): shown at invite, paid on first mining claim
+        pending_invite_bonus=500 if ref_user else 0,
     )
     db.add(new_user)
     await db.flush()  # Чтобы получить new_user.id

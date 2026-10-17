@@ -1,157 +1,218 @@
 .boost-page-container {
-    display: flex;
-    flex-direction: column;
-    padding: 80px 16px;
-    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 84px 16px 120px;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 16px;
 }
 
+/* — Segmented category control — */
 .boost-categories-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 24px;
-    border-radius: 16px;
-    border: 2px solid black;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    font-size: 8px;
-    background-color: #2C1B52;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--sh-border-soft);
+  background: rgba(255, 255, 255, 0.02);
 }
-
 
 .boost-category-card {
-    padding: 8px 16px;
-    border-radius: 16px;
-    border: 2px solid black;
-    width: 90%;
-    text-align: center;
-    font-size: 12px;
+  flex: 1;
+  padding: 9px 4px;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  color: var(--sh-faint);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .boost-category-active {
-    background-color: #1F0735;
-    color: white;
-    text-decoration: underline;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--sh-text);
 }
 
-.boost-category-inactive {
-    background-color: #1F0735;
-    color: white;
+.boost-category-inactive:hover {
+  color: var(--sh-dim);
 }
 
+/* — Boost cards — */
 .boost-cards-container {
-    background-color: #2C1B52;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    border-radius: 16px;
-    width: 100%;
-    gap: 1px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .boost-card-button {
-    background-color: #2C1B52;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 8px;
-    padding: 10px 30px;
-    text-align: center;
-    line-height: 1.2;
-    gap: 10px;
-    min-height: 130px;
-    border: 2px solid #000000;
-    border-radius: 12px;
+  background: var(--sh-surface);
+  border: 1px solid var(--sh-border);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--sh-text);
+  font-size: 12px;
+  padding: 20px 12px 16px;
+  text-align: center;
+  line-height: 1.35;
+  min-height: 168px;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.boost-card-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.boost-card-button:active {
+  transform: scale(0.97);
 }
 
 .boost-card-icon {
-    width: 90px;
-    height: 90px;
-    object-fit: contain;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+}
+
+.boost-card-level {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--sh-accent-text);
+  background: var(--sh-accent-soft);
+  border: 1px solid rgba(245, 197, 24, 0.25);
+  padding: 3px 8px;
+  border-radius: 999px;
 }
 
 .boost-card-text {
-  white-space: pre-line;
-  text-align: center;
+  color: var(--sh-dim);
+  font-weight: 600;
+  max-width: 100%;
 }
 
+/* — Upgrade modal — */
 .boost-modal-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-    padding: 0 16px 16px;
+  gap: 14px;
 }
 
 .boost-modal-image {
-  width: 128px;
-  height: 128px;
+  width: 104px;
+  height: 104px;
   object-fit: contain;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.5));
 }
 
 .boost-modal-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 12px;
   width: 100%;
 }
 
 .boost-description {
-  color: white;
+  color: var(--sh-dim);
   text-align: center;
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
 }
 
 .boost-stats {
-  background-color: #1F0735;
-  padding: 12px;
-  border-radius: 8px;
-    border: 2px solid #000000;
-  color: white;
+  background: var(--sh-surface);
+  padding: 6px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--sh-border);
+  color: var(--sh-text);
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.boost-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--sh-border-soft);
+}
+
+.boost-stat-row:last-child {
+  border-bottom: none;
+}
+
+.boost-stat-row > span:first-child {
+  color: var(--sh-dim);
+}
+
+.boost-stat-row > span:last-child {
+  font-weight: 650;
+}
+
+.boost-stat-accent {
+  color: var(--sh-accent-text);
+}
+
+.upgrade-error {
+  color: var(--sh-bad);
   font-size: 12px;
   text-align: center;
-}
-
-.boost-stats p {
-  margin: 1px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 3px 0;
-  border-bottom: 1px solid #2C1B52;
-}
-
-/* Для строки с уровнем оставляем в одну линию */
-.boost-stats p:first-child {
-  flex-direction: row;
-  justify-content: center;
-}
-
-/* Убираем линию у последнего элемента */
-.boost-stats p:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-/* Убираем лишний отступ у первого элемента */
-.boost-stats p:first-child {
-  padding-top: 0;
+  background: rgba(255, 122, 122, 0.08);
+  border: 1px solid rgba(255, 122, 122, 0.25);
+  border-radius: 10px;
+  padding: 10px 12px;
 }
 
 .upgrade-button {
-  background-color: #4A4A4A;
-  color: white;
-  padding: 6px;
-  border-radius: 8px;
-    border: 2px solid #000000;
+  background: var(--sh-accent);
+  color: #1a1405;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
   width: 100%;
-  font-size: 16px;
-  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s, opacity 0.15s;
+  margin-top: 4px;
+}
+
+.upgrade-button:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+
+.upgrade-button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .upgrade-button:disabled {
-  opacity: 0.5;
+  opacity: 0.35;
   cursor: not-allowed;
+}
+
+.flex.items-center.justify-center.h-48 {
+  min-height: 192px;
 }

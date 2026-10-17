@@ -15,17 +15,22 @@
     "predeploy": "npm run build"
   },
   "dependencies": {
+    "@radix-ui/react-progress": "^1.2.1",
+    "@radix-ui/react-slot": "^1.5.0",
     "@tailwindcss/vite": "^4.0.0",
     "@telegram-apps/sdk-react": "^2.0.20",
     "@telegram-apps/telegram-ui": "^2.1.8",
     "@tonconnect/ui-react": "^2.1.0",
     "@twa-dev/sdk": "^8.0.1",
     "axios": "^1.8.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "eruda": "^3.0.1",
     "lucide-react": "^0.474.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.23.0"
+    "react-router-dom": "^6.23.0",
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",

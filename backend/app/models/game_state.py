@@ -15,6 +15,8 @@ class GameState(Base):
     balance = Column(Integer, default=0)
 
     boost_multiplier = Column(Integer, default=1)  # множитель бонусов
+    task_boost_pct = Column(Float, default=0)  # +% к скорости майнинга за задания (суммируется)
+    admin_boost_pct = Column(Float, default=0)  # +% к скорости от админа (панель, отдельно от заданий)
     passive_income = Column(Integer, default=0)  # доход в секунду
 
     energy = Column(Integer, default=100)
@@ -28,7 +30,7 @@ class GameState(Base):
     user = relationship("User", back_populates="game_state")
 
     __table_args__ = (
-        CheckConstraint('energy >= 0 AND energy <= 100', name='energy_range'),
+        CheckConstraint('energy >= 0 AND energy <= 110', name='energy_range'),
         CheckConstraint('balance >= 0', name='non_negative_balance'),
         CheckConstraint('passive_income >= 0', name='non_negative_income')
     )

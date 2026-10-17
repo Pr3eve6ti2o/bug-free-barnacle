@@ -1,8 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import update
 from datetime import datetime
 from sqlalchemy.orm import selectinload
 from app.models.user import User
+from app.models.game_state import GameState
+from app.services.p2e import credit_user, get_max_energy
 
 MAX_PASSIVE_ACCUMULATION_TIME = 3600  # 1 hour in seconds
 MINUTE_INTERVAL = 60  # Apply income every minute when in-app
@@ -35,13 +38,21 @@ async def process_click(db: AsyncSession, telegram_id: int) -> dict:
     if not game_state:
         return {"error": "Game state not found"}
 
-    # Рассчитываем награду
+    # Energy is the spend guard for the legacy click — it must be checked
+    # BEFORE crediting (previously clicks paid out at any energy, even
+    # negative, so a script could mint CSM + referral shares indefinitely).
+    if (game_state.energy or 0) <= 0:
+        return {"error": "Not enough energy"}
+
+    # Рассчитываем награду (verified +10% и 5% рефереру — внутри credit_user)
     base_income = base_click_income(game_state.level)
-    reward = base_income * game_state.boost_multiplier
+    reward = await credit_user(
+        db, user, base_income * game_state.boost_multiplier,
+        mined=True, apply_verified=True,
+    )
 
     # Обновляем состояние игры
     game_state.score += reward
-    game_state.balance += reward
     game_state.last_click_at = datetime.utcnow()
     
     game_state.energy -= 1
@@ -142,19 +153,33 @@ async def apply_passive_income(db: AsyncSession, telegram_id: int, is_returning:
         return income_data
     
     game_state = income_data["game_state"]
+    bal_before = game_state.balance  # plain value: ORM expires on rollback
     current_time = income_data["current_time"]
     
     # For returning users (coming back to app), apply all accumulated income at once
     if is_returning:
         # Round income to integer before adding to balance
         rounded_income = int(income_data["accumulated_income"])
-        
-        # Apply accumulated income to user's balance
-        game_state.balance += rounded_income
-        
+
+        if rounded_income > 0:
+            # CAS gate: only the caller that advances last_income_at from the
+            # observed value gets to credit — parallel collects can't double-pay.
+            gate = await db.execute(
+                update(GameState)
+                .where(GameState.user_id == game_state.user_id,
+                       GameState.last_income_at == game_state.last_income_at)
+                .values(last_income_at=current_time)
+            )
+            if gate.rowcount != 1:
+                await db.rollback()
+                return {"applied_income": 0, "new_balance": bal_before, "is_returning": True}
+
+        # Apply accumulated income to user's balance (5% рефереру — внутри credit_user)
+        await credit_user(db, income_data["user"], rounded_income, mined=True)
+
         # Update last income timestamp
         game_state.last_income_at = current_time
-        
+
         # Save changes to DB
         await db.commit()
 
@@ -174,9 +199,25 @@ async def apply_passive_income(db: AsyncSession, telegram_id: int, is_returning:
         if time_since_last_update >= MINUTE_INTERVAL:
             # Calculate income for the minute (hourly rate / 60)
             minute_income = int(game_state.passive_income / 60)
-            
-            # Apply income
-            game_state.balance += minute_income
+
+            if minute_income > 0:
+                # CAS gate on last_income_at — parallel collects can't double-pay.
+                gate = await db.execute(
+                    update(GameState)
+                    .where(GameState.user_id == game_state.user_id,
+                           GameState.last_income_at == game_state.last_income_at)
+                    .values(last_income_at=current_time)
+                )
+                if gate.rowcount != 1:
+                    await db.rollback()
+                    return {
+                        "applied_income": 0,
+                        "new_balance": bal_before,
+                        "is_returning": False
+                    }
+
+            # Apply income (5% рефереру — внутри credit_user)
+            await credit_user(db, income_data["user"], minute_income, mined=True)
             
             # Update last income timestamp
             game_state.last_income_at = current_time
@@ -207,11 +248,12 @@ async def calculate_energy_restore(db: AsyncSession, telegram_id: int) -> dict:
     current_time = datetime.now()
     elapsed_sec10 = (current_time - game_state.last_energy_update).total_seconds() /10
     energy_to_restore = int(elapsed_sec10 * ENERGY_RESTORE_AMOUNT)
-    
+    max_energy = get_max_energy(user)
+
     return {
         "current_energy": game_state.energy,
         "energy_to_restore": energy_to_restore,
-        "max_energy": MAX_ENERGY,
+        "max_energy": max_energy,
         "game_state": game_state,
         "current_time": current_time
     }
@@ -226,16 +268,16 @@ async def apply_energy_restore(db: AsyncSession, telegram_id: int) -> dict:
     current_time = result["current_time"]
     energy_to_restore = result["energy_to_restore"]
     
-    if energy_to_restore > 0 and game_state.energy < MAX_ENERGY:
+    if energy_to_restore > 0 and game_state.energy < result["max_energy"]:
         game_state.energy = min(
             game_state.energy + energy_to_restore,
-            MAX_ENERGY
+            result["max_energy"]
         )
         game_state.last_energy_update = current_time
         await db.commit()
-    
+
     return {
         "new_energy": game_state.energy,
         "restored_amount": energy_to_restore,
-        "max_energy": MAX_ENERGY
+        "max_energy": result["max_energy"]
     }

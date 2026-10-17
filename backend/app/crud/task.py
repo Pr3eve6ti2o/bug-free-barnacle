@@ -16,7 +16,7 @@ async def create_task(db: AsyncSession, task: TaskCreate):
 
 
 async def get_tasks(db: AsyncSession):
-    result = await db.execute(select(Task))
+    result = await db.execute(select(Task).where(Task.is_active.is_(True)))
     return result.scalars().all()
 
 
@@ -80,6 +80,9 @@ async def get_user_tasks(db: AsyncSession, telegram_id: int):
                     "description": task.description,
                     "type": task.type,
                     "reward": task.reward,
+                    "reward_type": getattr(task, "reward_type", "token") or "token",
+                    "multiplier_pct": float(getattr(task, "multiplier_pct", 0) or 0),
+                    "link_url": getattr(task, "link_url", None),
                     "condition_value": task.condition_value,
                     "condition_type": task.condition_type
                 },

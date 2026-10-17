@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: '/SpaceHunter',
+    build: {
+      // demo-only: allow top-level await (mockEnv) in the bundle
+      target: 'esnext',
+    },
     plugins: [
       tailwindcss(),
       react(),
@@ -19,6 +23,7 @@ export default defineConfig(({ mode }) => {
     publicDir: './public',
     server: {
       host: true,
+      allowedHosts: ['.pinggy-free.link', '.pinggy.net', '.loca.lt', '.trycloudflare.com'],
       // Прокси используется только в режиме разработки
       proxy: !isProduction
         ? {

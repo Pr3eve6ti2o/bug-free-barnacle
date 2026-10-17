@@ -1,90 +1,103 @@
 .tasks-page-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 70px 16px 50px 16px;
+  min-height: 100dvh;
+  padding: 84px 16px 120px;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 14px;
 }
-  
+
+/* — Segmented tabs — */
 .tasks-tabs {
   display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 1px;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--sh-border-soft);
+  background: rgba(255, 255, 255, 0.02);
+  align-self: center;
+  width: 100%;
+  max-width: 320px;
 }
 
 .tab-button {
-  padding: 8px 24px;
-  border-radius: 16px;
-  background-color: transparent;
-  color: white;
-  font-size: 16px;
-  transition: all 0.3s;
-  min-width: 100px;
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  color: var(--sh-faint);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
 }
 
 .tab-button.active {
-  background-color: transparent;
-  text-decoration: underline;
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--sh-text);
 }
 
 .tasks-list-container {
   flex: 1;
-  overflow: hidden;
-  background-color: #2C1B52;
-  border-radius: 16px;
-  border: 2px solid #000000;
-  padding: 16px;
-  margin-bottom: 60px;
+  min-height: 0;
 }
 
 .tasks-list {
-  height: 100%;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .task-item {
-  background-color: #1F0735;
-  border-radius: 12px;
-  border: 2px solid #000000;
-  padding: 16px;
+  background: var(--sh-surface);
+  border-radius: 16px;
+  border: 1px solid var(--sh-border);
+  padding: 14px 14px 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
 }
 
 .task-info {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex-grow: 1;
-  margin-right: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .task-header {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .task-description {
-  color: white;
-  font-size: 12px;
+  color: var(--sh-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .task-reward {
-  color: #FFD700;
+  color: var(--sh-accent-text);
   font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .task-progress-bar {
   position: relative;
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
   overflow: hidden;
-  margin-top: 4px;
 }
 
 .task-progress-fill {
@@ -92,64 +105,65 @@
   top: 0;
   left: 0;
   height: 100%;
-  background-color: #1ABD8D;
+  background: linear-gradient(90deg, #c9960f, var(--sh-accent));
+  border-radius: 999px;
   transition: width 0.3s ease;
 }
 
 .task-progress-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 8px;
-  color: white;
-  text-shadow: 0px 0px 2px #000;
-  white-space: nowrap;
+  font-size: 10px;
+  color: var(--sh-faint);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .task-button {
-  padding: 8px 10px;
-  border-radius: 20px;
-  border: 2px solid #000000;
-  background-color: #FFE169;
-  color: black;
-  font-size: 10px;
-  font-weight: 500;
-  min-width: 80px;
-  width: 80px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--sh-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--sh-text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  min-width: 76px;
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: all 0.2s;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+  flex-shrink: 0;
 }
 
-.task-button:active {
-  opacity: 0.7;
+.task-button:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .task-button.claim-ready {
-  background-color: #1ABD8D;
-  color: white;
-  animation: pulse 1.5s infinite;
+  background: var(--sh-accent);
+  border-color: transparent;
+  color: #1a1405;
 }
 
-.task-button.loading {
-  opacity: 0.7;
+.task-button.loading,
+.task-button:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.loading, .no-tasks {
+.loading,
+.no-tasks {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 200px;
-  color: white;
+  min-height: 220px;
+  color: var(--sh-dim);
+  font-size: 13px;
   text-align: center;
+  padding: 0 24px;
+  line-height: 1.6;
 }
+
+/* ——— Starter tasks (farming redesign) ——— */
+.tasks-head { margin-bottom: 14px; }
+.task-sub { font-size: 12.5px; opacity: 0.72; margin: 2px 0 8px; line-height: 1.4; }
+.task-reward-boost { color: #7ee2a8; }
+.task-done { opacity: 0.55; }

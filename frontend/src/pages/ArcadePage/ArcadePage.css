@@ -1,0 +1,76 @@
+.wheel-wrap { position: relative; width: 240px; height: 240px; margin: 6px auto 2px; }
+.wheel-disc {
+  width: 100%; height: 100%; border-radius: 50%;
+  border: 3px solid rgba(245, 197, 24, 0.55);
+  box-shadow: 0 0 34px rgba(245, 197, 24, 0.18), inset 0 0 24px rgba(0,0,0,0.55);
+  transition: transform 4.2s cubic-bezier(0.12, 0.8, 0.08, 1);
+}
+.wheel-pointer {
+  position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0; z-index: 3;
+  border-left: 10px solid transparent; border-right: 10px solid transparent;
+  border-top: 16px solid var(--sh-gold);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+.wheel-hub {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 54px; height: 54px; border-radius: 50%; z-index: 2;
+  background: radial-gradient(circle at 35% 30%, #ffe98a, var(--sh-gold) 60%, #a87f0a);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 12px; color: #221a02; letter-spacing: 0.4px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+}
+.wheel-label {
+  position: absolute; top: 50%; left: 50%; z-index: 1;
+  font-size: 12.5px; font-weight: 750; color: #f3e9c8;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+}
+
+.coin-disc {
+  width: 92px; height: 92px; border-radius: 50%; margin: 4px auto;
+  background: radial-gradient(circle at 35% 30%, #ffe98a, var(--sh-gold) 58%, #a87f0a);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; color: #221a02; letter-spacing: 0.5px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 -4px 10px rgba(0,0,0,0.25);
+}
+.coin-disc.flipping { animation: coinflip 0.9s ease-in-out; }
+@keyframes coinflip {
+  0% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(540deg) scale(1.12); }
+  100% { transform: rotateY(1080deg) scale(1); }
+}
+
+.reactor-btn {
+  width: 148px; height: 148px; border-radius: 50%; margin: 6px auto; display: block;
+  border: 3px solid rgba(245, 197, 24, 0.6); cursor: pointer;
+  background: radial-gradient(circle at 38% 30%, #ffedb0, var(--sh-gold) 55%, #9a7407);
+  color: #221a02; font-weight: 850; font-size: 17px; letter-spacing: 0.4px;
+  box-shadow: 0 0 44px rgba(245, 197, 24, 0.35), 0 10px 24px rgba(0,0,0,0.55), inset 0 -8px 18px rgba(0,0,0,0.28);
+  transition: transform 0.08s ease, box-shadow 0.2s ease;
+  animation: reactorPulse 2.6s ease-in-out infinite;
+}
+.reactor-btn:active { transform: scale(0.94); }
+.reactor-btn:disabled { opacity: 0.65; cursor: wait; }
+@keyframes reactorPulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(245,197,24,0.25), 0 10px 24px rgba(0,0,0,0.55), inset 0 -8px 18px rgba(0,0,0,0.28); }
+  50% { box-shadow: 0 0 58px rgba(245,197,24,0.5), 0 10px 24px rgba(0,0,0,0.55), inset 0 -8px 18px rgba(0,0,0,0.28); }
+}
+
+.arcade-progress {
+  height: 10px; border-radius: 6px; background: rgba(255,255,255,0.09);
+  overflow: hidden; margin-top: 8px;
+}
+.arcade-progress > div {
+  height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, #a87f0a, var(--sh-gold));
+  transition: width 0.35s ease;
+}
+
+.stake-chip {
+  padding: 7px 0; flex: 1; border-radius: 10px; cursor: pointer; text-align: center;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  font-weight: 700; font-size: 13.5px; color: inherit;
+}
+.stake-chip.active {
+  background: rgba(245,197,24,0.14); border-color: rgba(245,197,24,0.55); color: var(--sh-gold);
+}

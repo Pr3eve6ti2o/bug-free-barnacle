@@ -1,3 +1,5 @@
+import '@/telegram/initTelegram';
+
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 
 import { App } from '@/components/App.tsx';

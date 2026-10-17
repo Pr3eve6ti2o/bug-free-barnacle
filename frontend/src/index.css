@@ -1,27 +1,302 @@
 @import "tailwindcss";
 
-@font-face {
-font-family: "Space Pixel";
-src: url("../src/fonts/SpacePixel.ttf") format("truetype");
+/* ——— Space Hunter · sleek minimal theme ——— */
+:root {
+  --sh-bg: #06070c;
+  --sh-bg-2: #0a0c14;
+  --sh-surface: #0e1119;
+  --sh-surface-2: #121623;
+  --sh-border: rgba(255, 255, 255, 0.08);
+  --sh-border-soft: rgba(255, 255, 255, 0.05);
+  --sh-text: #f4f6fb;
+  --sh-dim: rgba(244, 246, 251, 0.58);
+  --sh-faint: rgba(244, 246, 251, 0.34);
+  --sh-accent: #f5c518;
+  --sh-accent-soft: rgba(245, 197, 24, 0.12);
+  --sh-accent-text: #ffd94d;
+  --sh-good: #3ddc97;
+  --sh-bad: #ff7a7a;
+  --sh-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  background-color: var(--sh-bg);
+}
+
+/* ——— shadcn/ui semantic tokens mapped onto the SpaceHunter palette (Tailwind v4) ——— */
+@theme inline {
+  --color-background: var(--sh-bg);
+  --color-foreground: var(--sh-text);
+  --color-card: var(--sh-surface);
+  --color-card-foreground: var(--sh-text);
+  --color-popover: var(--sh-surface-2);
+  --color-popover-foreground: var(--sh-text);
+  --color-primary: var(--sh-accent);
+  --color-primary-foreground: #1a1405;
+  --color-secondary: var(--sh-surface-2);
+  --color-secondary-foreground: var(--sh-text);
+  --color-muted: var(--sh-surface-2);
+  --color-muted-foreground: var(--sh-dim);
+  --color-accent: var(--sh-accent-soft);
+  --color-accent-foreground: var(--sh-accent-text);
+  --color-destructive: var(--sh-bad);
+  --color-success: var(--sh-good);
+  --color-border: var(--sh-border);
+  --color-input: var(--sh-border);
+  --color-ring: var(--sh-accent);
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
 
 body {
-    background-color: #2C1B52;
-    position: relative;
-    font-family: 'Space Pixel', sans-serif;
-    padding: 0;
-    margin: 0;
+  background-color: var(--sh-bg);
+  color: var(--sh-text);
+  font-family: var(--sh-font);
+  padding: 0;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  position: relative;
+  min-height: 100dvh;
 }
 
+/* Whisper-quiet starfield: a few faint dots + soft ambient glows, no noise */
 body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('../assets/background_image_Space_Hunter.jpg') no-repeat center center fixed;
-    background-size: cover;
-    opacity: 0.5;
-    z-index: -1;
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 32% 8%, rgba(255, 255, 255, 0.3), transparent 60%),
+    radial-gradient(1.5px 1.5px at 52% 24%, rgba(255, 255, 255, 0.4), transparent 60%),
+    radial-gradient(1px 1px at 68% 12%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 84% 30%, rgba(255, 255, 255, 0.3), transparent 60%),
+    radial-gradient(1px 1px at 8% 52%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1.5px 1.5px at 24% 66%, rgba(255, 255, 255, 0.3), transparent 60%),
+    radial-gradient(1px 1px at 44% 58%, rgba(255, 255, 255, 0.45), transparent 60%),
+    radial-gradient(1px 1px at 62% 74%, rgba(255, 255, 255, 0.3), transparent 60%),
+    radial-gradient(1px 1px at 78% 62%, rgba(255, 255, 255, 0.4), transparent 60%),
+    radial-gradient(1px 1px at 92% 84%, rgba(255, 255, 255, 0.3), transparent 60%),
+    radial-gradient(1px 1px at 16% 88%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(120% 55% at 50% -10%, rgba(96, 120, 255, 0.06), transparent 60%),
+    radial-gradient(100% 45% at 50% 112%, rgba(245, 197, 24, 0.035), transparent 60%);
+  background-color: var(--sh-bg);
+}
+
+/* Tabular numerals for every counter / balance */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Small caps section label */
+.sh-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sh-faint);
+}
+
+button {
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ——— Ambient nebula: slow-breathing deep-space glows above the starfield ——— */
+.sh-nebula {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 38% at 18% 6%, rgba(99, 102, 241, 0.10), transparent 65%),
+    radial-gradient(52% 34% at 85% 22%, rgba(168, 85, 247, 0.07), transparent 65%),
+    radial-gradient(70% 42% at 50% 108%, rgba(245, 197, 24, 0.055), transparent 62%);
+  animation: sh-nebula-breathe 14s ease-in-out infinite alternate;
+}
+@keyframes sh-nebula-breathe {
+  from { opacity: 0.75; transform: scale(1); }
+  to   { opacity: 1;    transform: scale(1.04); }
+}
+
+/* ——— Mining hero: circular progress ring with gold glow ——— */
+.mining-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 2px;
+}
+.mining-ring-wrap {
+  position: relative;
+  width: 196px;
+  height: 196px;
+  filter: drop-shadow(0 0 26px rgba(245, 197, 24, 0.22));
+}
+.mining-ring-wrap svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.mining-ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.07);
+  stroke-width: 10;
+}
+.mining-ring-fill {
+  fill: none;
+  stroke: url(#shGoldGrad);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+.mining-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.mining-ring-timer {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #fff6d8 0%, var(--sh-accent) 60%, #c98f06 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.mining-ring-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sh-faint);
+}
+.mining-rate {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sh-text);
+}
+.mining-rate .tnum { font-variant-numeric: tabular-nums; }
+
+/* Rate breakdown: the ATF levers — refer more / hold more */
+.rate-breakdown {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--sh-border-soft);
+}
+.rate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--sh-dim);
+}
+.rate-row b {
+  color: var(--sh-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.rate-row .rate-up { color: var(--sh-good); }
+.rate-row .rate-next { color: var(--sh-faint); font-size: 11.5px; }
+.rate-cta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--sh-accent-text);
+  text-align: center;
+}
+
+/* ——— Tap juice: floating +N indicators ——— */
+.tap-float-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 5;
+}
+.tap-float {
+  position: absolute;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--sh-accent-text);
+  text-shadow: 0 0 12px rgba(245, 197, 24, 0.6);
+  animation: tap-float-up 1.4s ease-out forwards;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@keyframes tap-float-up {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  15%  { opacity: 1; transform: translate(-50%, -60%) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -190%) scale(0.95); }
+}
+.ship-press {
+  transition: transform 0.08s ease-out;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.ship-press:active {
+  transform: scale(0.93);
+}
+.ship-glow {
+  position: absolute;
+  inset: -18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 197, 24, 0.16) 0%, rgba(245, 197, 24, 0.05) 45%, transparent 70%);
+  animation: ship-glow-pulse 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ship-glow-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.06); }
+}
+
+/* ——— Glass cards: subtle depth for the hero surfaces ——— */
+.p2e-card-glass {
+  background: linear-gradient(165deg, rgba(20, 24, 38, 0.72), rgba(10, 12, 20, 0.66));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ——— Touch, motion & safe-area utilities ——— */
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tg-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

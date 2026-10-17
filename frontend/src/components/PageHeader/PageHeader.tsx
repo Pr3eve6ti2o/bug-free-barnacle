@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import WebApp from '@twa-dev/sdk';
 import './PageHeader.css';
+import '@/components/p2e.css';
 import { ModalWindow } from '../ModalWindow/ModalWindow';
+import { TermsReader } from '../TermsConsent/TermsConsent';
 
-import { gameApi } from '../../services/api';
+import { gameApi, miningApi } from '../../services/api';
 
 
 
@@ -17,7 +19,9 @@ import DropPageIcon from '../icons/DropPageIcon/DropPageIcon.svg';
 export const PageHeader: React.FC = () => {
 
     const [passiveIncome, setPassiveIncome] = useState(0);
+    const [miningRate, setMiningRate] = useState<number | null>(null);
     const [showHelpModal, setShowHelpModal] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
     const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 99281932;
 
     // Загружаем пассивный доход при монтировании
@@ -30,12 +34,25 @@ export const PageHeader: React.FC = () => {
                 console.error('Error fetching passive income:', error);
             }
         };
-    
+
+        // Mining rate takes precedence in the header pill while a session runs
+        const fetchMiningRate = async () => {
+            try {
+                const s = await miningApi.getStatus(userId);
+                // Farming model: the pill shows mining power — the live
+                // session rate while mining, otherwise the potential rate.
+                setMiningRate(s.hourly_rate ?? s.potential?.hourly_rate ?? null);
+            } catch {
+                /* offline — keep last */
+            }
+        };
+
         // Загружаем пассивный доход при монтировании
         fetchPassiveIncome();
-        
+        fetchMiningRate();
+
         // Обновляем отображение пассивного дохода каждые 30 секунд
-        const displayIntervalId = setInterval(fetchPassiveIncome, 30000);
+        const displayIntervalId = setInterval(() => { fetchPassiveIncome(); fetchMiningRate(); }, 30000);
         
         // Применяем пассивный доход каждую минуту
         const applyIncomeInterval = setInterval(async () => {
@@ -60,19 +77,26 @@ export const PageHeader: React.FC = () => {
         setShowHelpModal(true);
     };
 
+    const user = WebApp.initDataUnsafe.user;
+    const userInitial = (user?.first_name?.[0] || user?.username?.[0] || '?').toUpperCase();
+
     return (
         <>
             <header className="page-header">
                 <div className="avatar-container">
-                    <img
-                        src={WebApp.initDataUnsafe.user?.photo_url}
-                        alt="User Avatar"
-                        className="user-avatar"
-                    />
+                    {user?.photo_url ? (
+                        <img
+                            src={user.photo_url}
+                            alt="User Avatar"
+                            className="user-avatar"
+                        />
+                    ) : (
+                        <span className="user-avatar-fallback">{userInitial}</span>
+                    )}
                 </div>
                 <div className="farming-rate-container">
-                    <div className="farming-rate">
-                        {passiveIncome.toLocaleString()} CSM/h
+                    <div className="farming-rate tnum">
+                        {(miningRate ?? passiveIncome).toLocaleString()} CSM/h
                     </div>
                 </div>
                 <button
@@ -86,49 +110,65 @@ export const PageHeader: React.FC = () => {
             <ModalWindow
                 isOpen={showHelpModal}
                 onClose={() => setShowHelpModal(false)}
-                title="Краткое руководство"
+                title="Quick guide"
             >
                 <div className="help-content">
                     <div className="help-section">
                         <h3 className="help-section-title">
-                            Fly Page
-                            <img src={FlyPageIcon} alt="Fly Icon" />
+                            Fly
+                            <img src={FlyPageIcon} alt="Fly icon" />
                         </h3>
-                        <p>Основная игровая страница, где вы можете нажимать на корабль для получения монет. Здесь также доступны: Ежедневные бонусы, Коллекция NFT и информация о вашем уровне.</p>
+                        <p>The main game screen — tap the ship to earn coins. Also home to daily bonuses, the NFT collection and your level progress.</p>
                     </div>
 
                     <div className="help-section">
                         <h3 className="help-section-title">
-                            Boosts Page
-                            <img src={BoostPageIcon} alt="Boost Icon" />
+                            Boost
+                            <img src={BoostPageIcon} alt="Boost icon" />
                         </h3>
-                        <p>Улучшайте свой корабль, приобретая модули в четырех категориях: Энергия, Навигация, Исследования и Защита. Каждое улучшение увеличивает доход и скорость сбора монет.</p>
+                        <p>Upgrade your ship with modules across four categories: energy, navigation, research and defence. Each upgrade raises income and tap power.</p>
                     </div>
 
                     <div className="help-section">
                         <h3 className="help-section-title">
-                            Tasks Page
-                            <img src={TasksPageIcon} alt="Tasks Icon" />
+                            Tasks
+                            <img src={TasksPageIcon} alt="Tasks icon" />
                         </h3>
-                        <p>Выполняйте ежедневные и глобальные задания для получения дополнительных наград. Задания обновляются каждый день и предлагают различные способы заработать монеты.</p>
+                        <p>Complete daily and global tasks for extra rewards. Daily tasks refresh every day.</p>
                     </div>
 
                     <div className="help-section">
                         <h3 className="help-section-title">
-                            Me Page
-                            <img src={MePageIcon} alt="Me Icon" />
+                            Me
+                            <img src={MePageIcon} alt="Me icon" />
                         </h3>
-                        <p>Просматривайте список ваших друзей, играющих в игру, отсортированный по количеству монет. Пригласите новых друзей, чтобы получить бонусы и соревноваться в рейтинге.</p>
+                        <p>See friends who play, ranked by balance. Invite friends to earn bonuses.</p>
                     </div>
 
                     <div className="help-section">
                         <h3 className="help-section-title">
-                            Drop Page
-                            <img src={DropPageIcon} alt="Drop Icon" />
+                            Drop
+                            <img src={DropPageIcon} alt="Drop icon" />
                         </h3>
-                        <p>Подключите TON-кошелек для вывода своих игровых монет. Здесь отображается ваш текущий игровой баланс и возможности обмена внутриигровой валюты.</p>
+                        <p>Connect a TON wallet to manage your game balance.</p>
                     </div>
+
+                    <button
+                        className="p2e-btn p2e-btn-ghost"
+                        style={{ marginTop: 6 }}
+                        onClick={() => { setShowHelpModal(false); setShowTermsModal(true); }}
+                    >
+                        Terms &amp; Conditions
+                    </button>
                 </div>
+            </ModalWindow>
+
+            <ModalWindow
+                isOpen={showTermsModal}
+                onClose={() => setShowTermsModal(false)}
+                title="Terms & Conditions"
+            >
+                <TermsReader />
             </ModalWindow>
         </>
     );

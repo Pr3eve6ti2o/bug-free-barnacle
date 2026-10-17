@@ -11,7 +11,29 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
 @router.post("/", response_model=TaskRead)
-async def create_task_endpoint(task: TaskCreate, db: AsyncSession = Depends(get_db)):
+async def create_task_endpoint(task: TaskCreate, admin_id: int, db: AsyncSession = Depends(get_db)):
+    # Task creation is an operator action: a public mint-your-own-reward
+    # endpoint was a straight money printer (audit P0-2).
+    from app.services.admin_state import is_admin
+    if not is_admin(admin_id):
+        raise HTTPException(status_code=403, detail="Admins only")
+    allowed_conditions = {
+        "level", "passive_income", "balance", "mining_sessions", "mining_claims",
+        "referrals", "bot_started", "wallet_connected",
+        "taps", "energy_spent", "daily_balance",
+    }
+    if task.condition_type not in allowed_conditions:
+        raise HTTPException(status_code=400, detail="Unknown condition_type")
+    if task.type not in ("permanent", "daily"):
+        raise HTTPException(status_code=400, detail="type must be permanent or daily")
+    if task.reward_type not in ("token", "multiplier"):
+        raise HTTPException(status_code=400, detail="reward_type must be token or multiplier")
+    if not (0 <= task.reward <= 100_000):
+        raise HTTPException(status_code=400, detail="reward out of range")
+    if not (0 <= task.multiplier_pct <= 100):
+        raise HTTPException(status_code=400, detail="multiplier_pct out of range")
+    if not (0 <= task.condition_value <= 10_000_000):
+        raise HTTPException(status_code=400, detail="condition_value out of range")
     return await create_task(db, task)
 
 

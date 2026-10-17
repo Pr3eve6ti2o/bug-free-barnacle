@@ -10,18 +10,28 @@ router = APIRouter(prefix="/wallet", tags=["wallet"])
 class WalletConnection(BaseModel):
     address: str
 
+
+def _valid_ton_address(address: str) -> bool:
+    """Same shape rule the withdrawal endpoint enforces: 48 chars, known
+    TON prefix. Stops garbage strings from flipping `is_verified` (+10%)."""
+    a = (address or "").strip()
+    return len(a) == 48 and a[:2] in ("EQ", "UQ", "kQ", "0Q")
+
+
 @router.post("/{telegram_id}/connect")
 async def connect_wallet(telegram_id: int, wallet: WalletConnection, db: AsyncSession = Depends(get_db)):
     """Подключить TON кошелек к аккаунту пользователя"""
+    if not _valid_ton_address(wallet.address):
+        raise HTTPException(status_code=400, detail="Invalid TON address")
     result = await db.execute(select(User).where(User.telegram_id == telegram_id))
     user = result.scalar_one_or_none()
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    user.ton_wallet_address = wallet.address
+
+    user.ton_wallet_address = wallet.address.strip()
     await db.commit()
-    
+
     return {"success": True, "message": "Wallet connected successfully"}
 
 @router.get("/{telegram_id}/status")

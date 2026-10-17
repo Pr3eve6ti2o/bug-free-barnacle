@@ -16,7 +16,8 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 
 try {
   // Configure all application dependencies.
-  init(retrieveLaunchParams().startParam === 'debug' || import.meta.env.DEV);
+  // demo-only: eruda console disabled for a clean UI (enable with ?start_param=debug)
+  init(retrieveLaunchParams().startParam === 'debug');
 
   root.render(
     <StrictMode>

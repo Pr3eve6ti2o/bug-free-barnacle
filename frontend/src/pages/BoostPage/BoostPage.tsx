@@ -2,8 +2,9 @@ import { FC, useEffect, useState } from 'react';
 import { Page } from '@/components/Page.tsx';
 import { ModalWindow } from '@/components/ModalWindow/ModalWindow';
 import { boostApi, gameApi } from '@/services/api';
+import { OgPassCard } from '@/components/OgPassCard/OgPassCard';
 import './BoostPage.css';
-import BoostPageIcon from '../../components/icons/BoostPageIcon/BoostPageIcon.svg';
+import '@/components/p2e.css';
 
 // Импортируем иконки для каждого улучшения
 import solarPanelsIcon from '../../../assets/Solar-Panels.png';
@@ -44,10 +45,10 @@ const iconMapping: Record<string, string> = {
 };
 
 const categories = [
-  { id: 'energy', name: 'Energy Modules' },
-  { id: 'navigation', name: 'Navigation Systems' },
-  { id: 'research', name: 'Research Technologies' },
-  { id: 'defense', name: 'Defense Systems' },
+  { id: 'energy', name: 'Energy' },
+  { id: 'navigation', name: 'Navigation' },
+  { id: 'research', name: 'Research' },
+  { id: 'defense', name: 'Defense' },
 ];
 
 interface BoostItem {
@@ -145,6 +146,8 @@ export const BoostPage: FC = () => {
   return (
     <Page back={false}>
       <div className="boost-page-container">
+        <OgPassCard telegramId={userId} balance={balance} onPurchased={setBalance} />
+        <div style={{ height: 14 }} />
         {/* Категории бустов */}
         <div className="boost-categories-container">
           {categories.map(({ id, name }) => (
@@ -179,7 +182,8 @@ export const BoostPage: FC = () => {
                   alt={item.name} 
                   className="boost-card-icon" 
                 />
-                <span className="boost-card-text">{item.name.replace(' ', '\n')}</span>
+                <span className="boost-card-level tnum">Lv {item.level}</span>
+                <span className="boost-card-text">{item.name}</span>
               </button>
             ))}
           </div>
@@ -193,7 +197,6 @@ export const BoostPage: FC = () => {
             setUpgradeError(null);
           }}
           title={selectedBoost?.name || ''}
-          icon={BoostPageIcon}
         >
           {selectedBoost && (
             <div className="boost-modal-content">
@@ -205,20 +208,23 @@ export const BoostPage: FC = () => {
               <div className="boost-modal-info">
                 <p className="boost-description">{selectedBoost.description}</p>
                 <div className="boost-stats">
-                  <p>Level: {selectedBoost.level}/{selectedBoost.max_level}</p>
-                  <p>
-                    Passive Income:
-                    <span>+{selectedBoost.passive_income * (1.5 ** selectedBoost.level)} CSM/hour</span>
-                  </p>
-                  <p>
-                    Speed Boost:
-                    <span>+{Math.round(selectedBoost.click_multiplier * 20 * (1.5 ** selectedBoost.level))}%</span>
-                  </p>
+                  <div className="boost-stat-row">
+                    <span>Level</span>
+                    <span className="tnum">{selectedBoost.level} / {selectedBoost.max_level}</span>
+                  </div>
+                  <div className="boost-stat-row">
+                    <span>Passive income</span>
+                    <span className="tnum boost-stat-accent">+{(selectedBoost.passive_income * (1.5 ** selectedBoost.level)).toFixed(1)} CSM/h</span>
+                  </div>
+                  <div className="boost-stat-row">
+                    <span>Tap power</span>
+                    <span className="tnum">+{Math.round(selectedBoost.click_multiplier * 20 * (1.5 ** selectedBoost.level))}%</span>
+                  </div>
                   {selectedBoost.level < selectedBoost.max_level ? (
-                    <p>
-                      Upgrade Cost:
-                      <span>{selectedBoost.current_cost} CSM</span>
-                    </p>
+                    <div className="boost-stat-row">
+                      <span>Upgrade cost</span>
+                      <span className="tnum boost-stat-accent">{selectedBoost.current_cost.toLocaleString()} CSM</span>
+                    </div>
                   ) : null}
                 </div>
                 

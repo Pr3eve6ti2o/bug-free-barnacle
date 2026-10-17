@@ -1,18 +1,12 @@
 import { FC, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import FlyPageIcon from '../icons/FlyPageIcon/FlyPageIcon.svg';
-import BoostPageIcon from '../icons/BoostPageIcon/BoostPageIcon.svg';
-import TasksPageIcon from '../icons/TasksPageIcon/TasksPageIcon.svg';
-import MePageIcon from '../icons/MePageIcon/MePageIcon.svg';
-import DropPageIcon from '../icons/DropPageIcon/DropPageIcon.svg';
+import { Pickaxe, ClipboardList, User } from 'lucide-react';
 import './NavigationBar.css';
 
 enum Page {
     Fly = 'Fly',
-    Boost = 'Boost',
     Tasks = 'Tasks',
     Me = 'Me',
-    Drop = 'Drop',
 }
 
 export const NavigationBar: FC = () => {
@@ -21,9 +15,14 @@ export const NavigationBar: FC = () => {
     const [currentPage, setCurrentPage] = useState<Page | null>(null);
 
     const getCurrentPageFromPath = (path: string): Page | null => {
-        const page = Object.values(Page).find(
-            (p) => path.toLowerCase() === `/spacehunter/${p.toLowerCase()}`
-        );
+        const segment = path
+            .split(/[?#]/)[0]
+            .split('/')
+            .filter((part) => part.length > 0)
+            .pop()
+            ?.toLowerCase();
+        if (!segment) return null;
+        const page = Object.values(Page).find((p) => p.toLowerCase() === segment);
         return page || null;
     };
 
@@ -32,11 +31,9 @@ export const NavigationBar: FC = () => {
     }, [location.pathname]);
 
     const pages = [
-        { id: Page.Fly, icon: FlyPageIcon, title: 'FLY' },
-        { id: Page.Boost, icon: BoostPageIcon, title: 'BOOST' },
-        { id: Page.Tasks, icon: TasksPageIcon, title: 'TASKS' },
-        { id: Page.Me, icon: MePageIcon, title: 'ME' },
-        { id: Page.Drop, icon: DropPageIcon, title: 'DROP' },
+        { id: Page.Fly, icon: Pickaxe, title: 'Mining' },
+        { id: Page.Tasks, icon: ClipboardList, title: 'Tasks' },
+        { id: Page.Me, icon: User, title: 'Me' },
     ];
 
     const handlePageClick = (id: Page) => {
@@ -47,16 +44,19 @@ export const NavigationBar: FC = () => {
 
     return (
         <nav className="navbar">
-            {pages.map((page) => (
-                <button
-                    key={page.id}
-                    onClick={() => handlePageClick(page.id)}
-                    className={`navbar-button ${currentPage === page.id ? 'active' : 'inactive'}`}
-                >
-                    <img src={page.icon} alt={`${page.title} icon`} className="w-5 h-5" />
-                    <span>{page.title}</span>
-                </button>
-            ))}
+            {pages.map((page) => {
+                const Icon = page.icon;
+                return (
+                    <button
+                        key={page.id}
+                        onClick={() => handlePageClick(page.id)}
+                        className={`navbar-button ${currentPage === page.id ? 'active' : 'inactive'}`}
+                    >
+                        <Icon size={21} strokeWidth={1.8} />
+                        <span>{page.title}</span>
+                    </button>
+                );
+            })}
         </nav>
     );
 };

@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.models.user import User
@@ -90,30 +91,58 @@ async def upgrade_boost(db: AsyncSession, telegram_id: int, boost_id: int):
         return {"error": "Boost already at max level"}
     
     # Рассчитываем стоимость апгрейда
-    upgrade_cost = boost.base_cost * (1.5 ** current_level)
+    upgrade_cost = int(boost.base_cost * (1.5 ** current_level))
     upgrade_click_multiplier = boost.click_multiplier * 0.2 * (1.5 ** current_level)
     upgrade_passive_income = boost.passive_income * (1.5 ** current_level)
 
-    # Проверяем хватает ли баланса
-    if game_state.balance < upgrade_cost:
+    # Atomic conditional debit: parallel upgrades can't spend the same CSM twice.
+    from sqlalchemy import update as _update
+    from app.models.game_state import GameState as _GS
+    debit = await db.execute(
+        _update(_GS)
+        .where(_GS.user_id == user.id, _GS.balance >= upgrade_cost)
+        .values(balance=_GS.balance - upgrade_cost)
+    )
+    if debit.rowcount != 1:
+        await db.rollback()
         return {"error": "Not enough balance"}
-    
-    # Создаем или обновляем UserBoost
+
+    # Claim the level atomically: the guarded UPDATE only lands if the level
+    # is still what we read — a concurrent upgrade of the same boost loses
+    # here, and its debit (same transaction) rolls back with it, so a
+    # double-tap can no longer charge twice for one level.
     if user_boost:
-        user_boost.level += 1
+        claim = await db.execute(
+            _update(UserBoost)
+            .where(UserBoost.user_id == user.id, UserBoost.boost_id == boost.id,
+                   UserBoost.level == current_level)
+            .values(level=current_level + 1)
+        )
+        if claim.rowcount != 1:
+            await db.rollback()
+            return {"error": "Upgrade conflict, please retry"}
     else:
         user_boost = UserBoost(user_id=user.id, boost_id=boost.id, level=1)
-        db.add(user_boost)
-    
-    # Обновляем характеристики пользователя
-    game_state.balance -= upgrade_cost
-    game_state.boost_multiplier += upgrade_click_multiplier
-    game_state.passive_income += upgrade_passive_income
-    
+        try:
+            async with db.begin_nested():
+                db.add(user_boost)
+                await db.flush()
+        except IntegrityError:
+            await db.rollback()
+            return {"error": "Upgrade conflict, please retry"}
+
+    # Stat increments are SQL-side too — an ORM += loses a concurrent
+    # upgrade landing in the same instant (even of a different boost).
+    await db.execute(
+        _update(_GS)
+        .where(_GS.user_id == user.id)
+        .values(boost_multiplier=_GS.boost_multiplier + upgrade_click_multiplier,
+                passive_income=_GS.passive_income + upgrade_passive_income)
+    )
+
     await db.commit()
     await db.refresh(game_state)
-    if user_boost in db:  # Проверяем, что объект все еще в сессии
-        await db.refresh(user_boost)
+    await db.refresh(user_boost)
     
     # Рассчитываем новую стоимость апгрейда
     new_level = user_boost.level
