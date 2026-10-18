@@ -259,7 +259,7 @@
 }
 
 .bonus-day-button:active:not(:disabled):not(.claimed) {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 .bonus-icon {
@@ -269,9 +269,9 @@
 }
 
 .day-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
   color: var(--sh-dim);
 }
 
@@ -283,7 +283,7 @@
 }
 
 .big-question-mark {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--sh-faint);
   margin: 4px 0;

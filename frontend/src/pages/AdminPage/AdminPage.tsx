@@ -302,7 +302,7 @@ export const AdminPage: FC = () => {
     ] : [];
 
     const statusChip = (s: string) => ({
-        padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 750,
+        padding: '3px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600, letterSpacing: '0.01em',
         background: s === 'paid' ? 'rgba(74,222,128,0.15)' : s === 'approved' ? 'rgba(96,165,250,0.15)'
             : s === 'rejected' ? 'rgba(248,113,113,0.15)' : 'rgba(245,197,24,0.15)',
         color: s === 'paid' ? '#4ade80' : s === 'approved' ? '#60a5fa' : s === 'rejected' ? '#f87171' : 'var(--sh-gold)',
@@ -310,9 +310,8 @@ export const AdminPage: FC = () => {
 
     return (
         <Page back={true}>
-            <div style={{ padding: '14px 14px 110px', maxWidth: 430, margin: '0 auto' }}>
-                <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 2px' }}>Admin Panel</h1>
-                <p style={{ opacity: 0.65, fontSize: 13, margin: '0 0 14px' }}>
+            <div style={{ padding: '16px 16px 110px', maxWidth: 430, margin: '0 auto' }}>
+                <h1 style={{ fontSize: 2
                     Every action is signature-verified against the admin allowlist and written to the audit log.
                 </p>
 

@@ -114,7 +114,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .boost-modal-image {
@@ -141,8 +141,9 @@
 
 .boost-stats {
   background: var(--sh-surface);
-  padding: 6px 16px;
-  border-radius: 14px;
+  padding: 4px 16px;
+  border-radius: 16px;
+  font-variant-numeric: tabular-nums;
   border: 1px solid var(--sh-border);
   color: var(--sh-text);
   font-size: 13px;
@@ -168,7 +169,7 @@
 }
 
 .boost-stat-row > span:last-child {
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .boost-stat-accent {
@@ -188,15 +189,16 @@
 .upgrade-button {
   background: var(--sh-accent);
   color: #1a1405;
-  padding: 14px;
+  height: 54px;
+  padding: 0 16px;
   border-radius: 14px;
   border: none;
   width: 100%;
-  font-size: 14px;
-  font-weight: 750;
-  letter-spacing: 0.06em;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: filter 0.15s, transform 0.1s, opacity 0.15s;
+  transition: filter 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
   margin-top: 4px;
 }
 
