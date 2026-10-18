@@ -360,7 +360,7 @@ export const MePage: FC = () => {
           <div className="sh-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Wallet size={14} strokeWidth={1.8} /> Withdraw CSM
           </div>
-          <div style={{ fontSize: 13, opacity: 0.78, margin: '6px 0 10px', lineHeight: 1.45 }}>
+          <div style={{ fontSize: 13, opacity: 0.62, margin: '8px 0 12px', lineHeight: 1.5 }}>
             Minimum withdrawal is {WITHDRAW_MIN.toLocaleString('en-GB')} CSM to a TON wallet.
             Requests are reviewed and paid out in order.
           </div>
@@ -369,7 +369,7 @@ export const MePage: FC = () => {
             placeholder="TON wallet address (EQ… / UQ…)"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            style={{ marginBottom: 8 }}
+            style={{ marginBottom: 8, height: 48, borderRadius: 12 }}
           />
           <div style={{ display: 'flex', gap: 8 }}>
             <input

@@ -206,19 +206,19 @@ export const ArcadePage: FC = () => {
     return (
         <Page back={true}>
             {loadError && (
-                <div className="p2e-card" style={{ marginBottom: 14 }}>
+                <div className="p2e-card" style={{ marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                         <Gift size={18} style={{ color: 'var(--sh-gold)' }} />
-                        <span style={{ fontWeight: 750, fontSize: 16 }}>Couldn't load the arcade</span>
+                        <span style={{ fontWeight: 600, fontSize: 15 }}>Couldn't load the arcade</span>
                     </div>
-                    <div style={{ fontSize: 13, opacity: 0.78, lineHeight: 1.45, marginBottom: 10 }}>{loadError}</div>
+                    <div style={{ fontSize: 13, opacity: 0.62, lineHeight: 1.45, marginBottom: 10 }}>{loadError}</div>
                     <Button className="w-full" disabled={loading} onClick={() => { void loadAll(); }}>
                         {loading ? 'Retrying…' : 'Retry'}
                     </Button>
                 </div>
             )}
             {loading && !arcade && !loadError && (
-                <div className="p2e-card" style={{ marginBottom: 14, opacity: 0.75 }}>Loading the arcade…</div>
+                <div className="p2e-card" style={{ marginBottom: 12, opacity: 0.62 }}>Loading the arcade…</div>
             )}
             <div style={{ padding: '14px 14px 110px', maxWidth: 430, margin: '0 auto' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>

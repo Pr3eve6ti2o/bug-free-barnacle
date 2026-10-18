@@ -351,11 +351,11 @@ export const AdminPage: FC = () => {
 
                 {section === 'overview' && (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                             {tiles.map(([k, v]) => (
-                                <div key={k} className="p2e-card" style={{ padding: '12px 14px' }}>
-                                    <div style={{ fontSize: 11.5, opacity: 0.6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{k}</div>
-                                    <div className="tnum" style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>{v}</div>
+                                <div key={k} className="p2e-card" style={{ padding: '14px 16px' }}>
+                                    <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.6, color: 'rgba(255,255,255,.62)' }}>{k}</div>
+                                    <div className="tnum" style={{ fontSize: 22, fontWeight: 600, marginTop: 4, letterSpacing: '-0.5px' }}>{v}</div>
                                 </div>
                             ))}
                         </div>
@@ -442,13 +442,13 @@ export const AdminPage: FC = () => {
                                 </div>
 
                                 <span style={labelStyle}>{selected.banned ? 'This player is banned — their game access is refused.' : 'Ban this player (game access is refused immediately)'}</span>
-                                <div style={{ display: 'flex', gap: 8 }}>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                     {!selected.banned && (
                                         <input style={inputStyle} value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Reason (optional)" />
                                     )}
                                     {selected.banned
                                         ? <Button style={{ flex: 1 }} onClick={() => applyBan(false)}>Unban player</Button>
-                                        : <Button style={{ flex: 1, background: '#b91c1c' }} onClick={() => applyBan(true)}>Ban player</Button>}
+                                        : <Button style={{ flex: 1, background: 'transparent', border: '1px solid rgba(185,28,28,.45)', color: '#f87171', boxShadow: 'none' }} onClick={() => applyBan(true)}>Ban player</Button>}
                                 </div>
                             </div>
                         )}
@@ -460,8 +460,8 @@ export const AdminPage: FC = () => {
                         <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
                             {['', 'pending', 'approved', 'paid', 'rejected'].map(s => (
                                 <button key={s || 'all'} onClick={() => { setWFilter(s); loadWithdrawals(s); }} style={{
-                                    padding: '6px 12px', borderRadius: 999, cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
-                                    color: 'inherit', border: `1px solid ${wFilter === s ? 'rgba(245,197,24,0.55)' : 'rgba(255,255,255,0.12)'}`,
+                                    padding: '7px 12px', minHeight: 32, borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                                    color: 'inherit', border: `1px solid ${wFilter === s ? 'rgba(245,197,24,0.5)' : 'rgba(255,255,255,0.07)'}`,
                                     background: wFilter === s ? 'rgba(245,197,24,0.14)' : 'rgba(255,255,255,0.05)',
                                 }}>
                                     {s === '' ? 'All' : s} {s && wCounts[s] ? `(${wCounts[s]})` : ''}
@@ -560,9 +560,9 @@ export const AdminPage: FC = () => {
                             <Button className="w-full" onClick={createTask}>Create task</Button>
                         </div>
                         <div className="p2e-card">
-                            <div style={{ fontWeight: 750, marginBottom: 6 }}>All tasks</div>
+                            <div style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em', marginBottom: 10 }}>All tasks</div>
                             {tasks.map(t => (
-                                <div key={t.id} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 13 }}>
+                                <div key={t.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 13 }}>
                                     <div style={{ flex: 1 }}>
                                         <div style={{ fontWeight: 700, opacity: t.is_active ? 1 : 0.45 }}>{t.title}</div>
                                         <div style={{ opacity: 0.55, fontSize: 12 }}>
@@ -639,8 +639,8 @@ export const AdminPage: FC = () => {
                         {comms && (
                             <div className="p2e-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                 <div>
-                                    <div style={{ fontWeight: 750, marginBottom: 4 }}>Payout proofs channel</div>
-                                    <p style={{ fontSize: 12.5, opacity: 0.65, margin: '0 0 8px' }}>
+                                    <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6 }}>Payout proofs channel</div>
+                                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,.62)', margin: '0 0 10px' }}>
                                         Create a Telegram channel, add @FARMGradientbot as an admin, and paste its
                                         @username or ID here. Real payouts you mark paid are posted there automatically.
                                     </p>
@@ -673,7 +673,7 @@ export const AdminPage: FC = () => {
                 )}
 
                 {section === 'controls' && settings && (
-                    <div className="p2e-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div className="p2e-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <Toggle on={settings.referrals_enabled} label="Referral payouts"
                             hint="When off, mining pays no crew shares or referral bonuses."
                             onClick={() => toggleSetting('referrals_enabled', !settings.referrals_enabled)} />
@@ -681,7 +681,6 @@ export const AdminPage: FC = () => {
                             hint="Switch the Fortune Wheel and Coin Flip on or off for everyone."
                             onClick={() => toggleSetting('arcade_enabled', !settings.arcade_enabled)} />
                         <div>
-                            <div style={{ fontWeight: 700, fontSize: 15 }}>Force-start a drop</div>
                             <div style={{ fontSize: 12.5, opacity: 0.65, marginBottom: 8 }}>
                                 Opens a 5,000 CSM drop immediately, live for 15 minutes.
                             </div>
