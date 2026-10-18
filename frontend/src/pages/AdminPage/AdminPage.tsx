@@ -586,8 +586,8 @@ export const AdminPage: FC = () => {
 
                 {section === 'economy' && economy && (
                     <div className="p2e-card">
-                        <div style={{ fontWeight: 750, marginBottom: 4 }}>Economy settings</div>
-                        <p style={{ fontSize: 12.5, opacity: 0.65, margin: '0 0 12px' }}>
+                        <div style={{ fontWeight: 600, marginBottom: 4 }}>Economy settings</div>
+                        <p style={{ fontSize: 13, opacity: 0.62, margin: '0 0 12px' }}>
                             Applied live: the base rate and session length affect new mining sessions,
                             the OG price affects new purchases, the welcome reward affects new claims.
                             In-flight sessions keep the terms they started with.
@@ -611,8 +611,8 @@ export const AdminPage: FC = () => {
                 {section === 'comms' && (
                     <>
                         <div className="p2e-card" style={{ marginBottom: 12 }}>
-                            <div style={{ fontWeight: 750, marginBottom: 4 }}>Announcement banner</div>
-                            <p style={{ fontSize: 12.5, opacity: 0.65, margin: '0 0 10px' }}>
+                            <div style={{ fontWeight: 600, marginBottom: 4 }}>Announcement banner</div>
+                            <p style={{ fontSize: 13, opacity: 0.62, margin: '0 0 10px' }}>
                                 Shown as a banner on every player's Mining screen.
                             </p>
                             <textarea style={{ ...inputStyle, minHeight: 74, resize: 'vertical' }} maxLength={280}
