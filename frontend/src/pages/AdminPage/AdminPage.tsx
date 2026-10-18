@@ -378,7 +378,7 @@ export const AdminPage: FC = () => {
 
                 {section === 'players' && (
                     <div className="p2e-card">
-                        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                        <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'center' }}>
                             <input style={inputStyle} placeholder="Search username or Telegram ID" value={q}
                                 onChange={e => setQ(e.target.value)} />
                             <Button onClick={() => loadUsers(q)}>Search</Button>
@@ -386,8 +386,8 @@ export const AdminPage: FC = () => {
                         {users.map(u => (
                             <button key={u.telegram_id} onClick={() => pickUser(u.telegram_id)} style={{
                                 display: 'flex', width: '100%', gap: 8, alignItems: 'center', textAlign: 'left',
-                                padding: '9px 6px', background: 'transparent', border: 'none', cursor: 'pointer',
-                                color: 'inherit', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 13.5,
+                                padding: '10px 4px', minHeight: 44, background: 'transparent', border: 'none', cursor: 'pointer',
+                                color: 'inherit', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 13,
                             }}>
                                 <span style={{ fontWeight: 700, flex: 1 }}>
                                     @{u.username || '—'} <span style={{ opacity: 0.45, fontWeight: 400 }}>{u.telegram_id}</span>
