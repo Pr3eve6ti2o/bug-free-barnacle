@@ -314,9 +314,9 @@ Request flow: Mini App → router → service → CRUD → SQLite. Every authent
 | # | Step | Purpose |
 |---|---|---|
 | 1 | `backend/alembic/versions` | Base schema and incremental revisions |
-| 2 | `backend/migrate_security_fixes.py` | Security-related constraints and columns |
-| 3 | `backend/migrate_boost_unique.py` | `ux_user_boost` |
-| 4 | `backend/migrate_admin_panel.py` | Admin panel tables and fields |
+| 2 | `backend/scripts/migrate_security_fixes.py` | Security-related constraints and columns |
+| 3 | `backend/scripts/migrate_boost_unique.py` | `ux_user_boost` |
+| 4 | `backend/scripts/migrate_admin_panel.py` | Admin panel tables and fields |
 
 All four run from `game-runners/restart-all.sh`, which rebuilds the stack; they are not applied by hand.
 

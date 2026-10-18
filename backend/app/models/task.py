@@ -16,7 +16,7 @@ class Task(Base):
     reward_type = Column(String, default="token")  # token | multiplier
     multiplier_pct = Column(Float, default=0)  # +% к скорости майнинга (для reward_type=multiplier)
     link_url = Column(String, nullable=True)  # внешняя ссылка для заданий-действий
-    is_active = Column(Boolean, default=True, nullable=False)  # панель: скрыть задание без удаления
+    is_active = Column(Boolean, default=True, server_default="1", nullable=False)  # панель: скрыть задание без удаления
     condition_value = Column(Integer, nullable=False) 
     condition_type = Column(String, nullable=False)  
 

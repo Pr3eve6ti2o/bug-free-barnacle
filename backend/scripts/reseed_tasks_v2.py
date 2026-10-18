@@ -8,7 +8,7 @@
 import sqlite3
 import os
 
-DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "demo.db")
+DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "demo.db")
 c = sqlite3.connect(DB)
 
 
@@ -49,8 +49,8 @@ c.execute("DELETE FROM user_tasks")
 c.execute("DELETE FROM tasks")
 c.executemany(
     """INSERT INTO tasks (title, description, type, condition_type, condition_value,
-                          reward, reward_type, multiplier_pct, link_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                          reward, reward_type, multiplier_pct, link_url, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)""",
     TASKS,
 )
 c.commit()

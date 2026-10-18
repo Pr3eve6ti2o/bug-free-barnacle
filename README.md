@@ -11,8 +11,10 @@ A play-to-earn Telegram Mini App where players farm CSM (in-game coins) — Fast
 - On-chain assets on TON: jetton (CSM) and NFT collection/item contracts.
 
 **Admin**
-- Admin surface gated behind configured Telegram admin IDs.
-- One-off migration script provisions the admin panel schema.
+- Admin panel at `/SpaceHunter/admin` (Overview, Players, Withdrawals, Tasks, Economy, Comms, Controls), gated behind configured Telegram admin IDs.
+- Withdrawal queue with escrow debit at request and a double-pay guard; payouts are settled manually and marked paid with a transaction hash.
+- One-click Excel export (`GET /api/admin/export.xlsx`, admin-only): a formatted five-sheet workbook — Summary, Players, Withdrawals, Referral Ledger, Admin Actions.
+- One-off scripts in `backend/scripts/` provision the schema and constraints.
 
 **Security**
 - Optional authentication layer (`SPACEHUNTER_AUTH`) — when enabled, the game refuses unauthenticated play.
@@ -34,16 +36,16 @@ A play-to-earn Telegram Mini App where players farm CSM (in-game coins) — Fast
 
 ## Prerequisites
 
-- Python 3 with a virtualenv at `~/workspace/spacehunter-demo/venv`
-- Node.js with `npm` / `npx` available on `PATH`
-- A Telegram bot token and the TON API endpoint for your network
-- Optional: a tunnel client (pinggy) if you need public access
+- Python 3.12 (a virtualenv is created in the repo as `./venv`)
+- Node.js 20+ with `npm` / `npx` available on `PATH`
+- A Telegram bot token (BotFather) for the Mini App entry point
+- Optional: a tunnel client (pinggy) if you need public access without a domain
 
 ## Installation
 
 ```bash
-git clone <repo-url> ~/workspace/spacehunter-demo
-cd ~/workspace/spacehunter-demo
+git clone https://github.com/Pr3eve6ti2o/bug-free-barnacle.git spacehunter
+cd spacehunter
 
 python3 -m venv venv
 ./venv/bin/pip install -r backend/requirements.txt
@@ -51,7 +53,17 @@ python3 -m venv venv
 cd frontend && npm install && cd ..
 ```
 
-Create `backend/.env` and populate the keys listed under [Configuration](#configuration). Do not commit it.
+Create `backend/.env` from the template and populate the keys listed under [Configuration](#configuration). Do not commit it.
+
+```bash
+cp backend/.env.example backend/.env   # then edit in your values
+```
+
+Then build the database (next section) and the frontend bundle:
+
+```bash
+cd frontend && NODE_ENV=development VITE_API_URL= npx vite build && cd ..
+```
 
 ## Configuration
 
@@ -70,16 +82,20 @@ All keys live in `backend/.env` unless noted. Names only — supply your own val
 
 Frontend build-time configuration is passed on the command line rather than a file — see [How to run](#how-to-run). The mock Telegram environment used for the browser demo path is DEV-gated and is not active in a production build.
 
-## Database migrations
+## Database setup and migrations
 
-Apply in this order. `game-runners/restart-all.sh` runs the whole sequence as part of rebuilding the stack, so a stack restart is normally all you need.
+The application does not create its schema at startup. On a fresh clone, build it in this order (all commands from the repo root, using the project venv):
 
-1. **Alembic versions** — `backend/alembic/`, brought up to date with Alembic's upgrade command.
-2. **`backend/migrate_security_fixes.py`** — security hardening.
-3. **`backend/migrate_boost_unique.py`** — boost uniqueness constraints.
-4. **`backend/migrate_admin_panel.py`** — admin panel schema.
+```bash
+./venv/bin/python backend/scripts/create_feature_tables.py   # feature tables (arcade, drops, admin, referrals)
+./venv/bin/python backend/scripts/migrate_security_fixes.py  # security hardening constraints
+./venv/bin/python backend/scripts/migrate_boost_unique.py    # ux_user_boost uniqueness
+./venv/bin/python backend/scripts/migrate_admin_panel.py     # admin panel schema
+./venv/bin/python backend/scripts/migrate_referral_unique.py # uq_referral_oneshot partial index
+./venv/bin/python backend/scripts/reseed_tasks_v2.py         # the 9 starter tasks (Tasks v2)
+```
 
-The three scripts are one-off and idempotent-safe to re-run via the restart script; do not reorder them, as later steps assume the schema left by earlier ones.
+The scripts live in `backend/scripts/`, are one-off and idempotent — safe to re-run; do not reorder them, as later steps assume the schema left by earlier ones. Historical Alembic versions are kept under `backend/alembic/` for reference; the scripts above are the supported path for this build. The operator restart script (`game-runners/restart-all.sh`, outside the repo) re-runs the four migrations on every stack rebuild.
 
 ## How to run
 
@@ -141,7 +157,9 @@ spacehunter-demo/
 │   ├── alembic/                 schema migrations (versions/)
 │   ├── migrate_security_fixes.py
 │   ├── migrate_boost_unique.py
-│   ├── migrate_admin_panel.py
+│   ├── scripts/                 one-off setup + migration scripts (see Database setup)
+│   ├── requirements.txt         pinned backend dependencies
+│   ├── .env.example             configuration template (copy to .env)
 │   └── .env                     local config, not committed
 ├── frontend/
 │   ├── src/                     React + TypeScript Mini App

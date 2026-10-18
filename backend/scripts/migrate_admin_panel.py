@@ -3,7 +3,7 @@ withdrawal review fields. Idempotent — safe to re-run."""
 import sqlite3
 from pathlib import Path
 
-DB = Path(__file__).resolve().parent.parent / "demo.db"
+DB = Path(__file__).resolve().parent.parent.parent / "demo.db"
 
 
 def add_column(cur, table: str, column: str, ddl: str) -> None:

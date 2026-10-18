@@ -11,7 +11,7 @@
 import sqlite3
 import os
 
-DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "demo.db")
+DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "demo.db")
 c = sqlite3.connect(DB)
 
 cols = [r[1] for r in c.execute("PRAGMA table_info(users)")]

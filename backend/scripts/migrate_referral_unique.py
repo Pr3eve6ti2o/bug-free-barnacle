@@ -24,7 +24,7 @@ resolve those rows by hand first.
 import sqlite3
 from pathlib import Path
 
-DB = Path(__file__).resolve().parents[1] / "demo.db"
+DB = Path(__file__).resolve().parents[2] / "demo.db"
 
 
 def main() -> None:
