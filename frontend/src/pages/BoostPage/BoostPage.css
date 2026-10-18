@@ -3,11 +3,11 @@
   flex-direction: column;
   padding: 84px 16px 120px;
   min-height: 100dvh;
-  max-width: 480px;
+  max-width: 430px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* — Segmented category control — */
@@ -50,20 +50,20 @@
 .boost-cards-container {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .boost-card-button {
   background: var(--sh-surface);
   border: 1px solid var(--sh-border);
-  border-radius: 18px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
   color: var(--sh-text);
-  font-size: 12px;
+  font-size: 13px;
   padding: 20px 12px 16px;
   text-align: center;
   line-height: 1.35;
@@ -74,12 +74,11 @@
 }
 
 .boost-card-button:hover {
-  transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.18);
 }
 
 .boost-card-button:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .boost-card-icon {

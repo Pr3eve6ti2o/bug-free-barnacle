@@ -277,11 +277,11 @@ export const ArcadePage: FC = () => {
                 </div>
 
                 {/* ------- Coin flip (from StoryVibe's casino) ------- */}
-                <div className="p2e-card" style={{ marginBottom: 14 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div className="p2e-card" style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                         <Dices size={18} style={{ color: 'var(--sh-gold)' }} />
-                        <span style={{ fontWeight: 750, fontSize: 16 }}>Coin Flip</span>
-                        <span style={{ marginLeft: 'auto', fontSize: 12.5, opacity: 0.75 }}>Pays 1.9×</span>
+                        <span style={{ fontWeight: 600, fontSize: 17, letterSpacing: '-0.01em' }}>Coin Flip</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 13, color: 'rgba(255,255,255,.62)', fontVariantNumeric: 'tabular-nums' }}>Pays 1.9×</span>
                     </div>
                     <div className={`coin-disc ${flipping ? 'flipping' : ''}`}>
                         {coinFace === 'heads' ? 'HEADS' : 'TAILS'}

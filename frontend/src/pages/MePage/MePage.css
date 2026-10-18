@@ -3,16 +3,16 @@
   flex-direction: column;
   min-height: 100dvh;
   padding: 84px 16px 120px;
-  max-width: 480px;
+  max-width: 430px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  gap: 20px;
+  gap: 12px;
 }
 
 .invite-buttons {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .invite-button {
@@ -21,19 +21,20 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 13px 12px;
+  min-height: 44px;
+  padding: 12px;
   border-radius: 14px;
   border: 1px solid var(--sh-border);
   background: rgba(255, 255, 255, 0.04);
   color: var(--sh-text);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s, filter 0.15s;
+  transition: background 0.18s ease, transform 0.15s ease, filter 0.18s ease;
 }
 
 .invite-button:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .invite-button.primary {
@@ -80,7 +81,7 @@
   background: var(--sh-surface);
   border-radius: 16px;
   border: 1px solid var(--sh-border);
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -88,15 +89,15 @@
 
 .friend-position {
   color: var(--sh-faint);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   min-width: 18px;
   text-align: center;
 }
 
 .friend-avatar {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
