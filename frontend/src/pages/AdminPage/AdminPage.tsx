@@ -586,8 +586,8 @@ export const AdminPage: FC = () => {
 
                 {section === 'economy' && economy && (
                     <div className="p2e-card">
-                        <div style={{ fontWeight: 600, marginBottom: 4 }}>Economy settings</div>
-                        <p style={{ fontSize: 13, opacity: 0.62, margin: '0 0 12px' }}>
+                        <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 6 }}>Economy settings</div>
+                        <p style={{ fontSize: 13, lineHeight: 1.5, color: 'rgba(255,255,255,.62)', margin: '0 0 16px' }}>
                             Applied live: the base rate and session length affect new mining sessions,
                             the OG price affects new purchases, the welcome reward affects new claims.
                             In-flight sessions keep the terms they started with.

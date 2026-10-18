@@ -240,8 +240,8 @@ export const ArcadePage: FC = () => {
                 <div className="p2e-card" style={{ marginBottom: 16, background: '#0b0d14', border: '1px solid rgba(255,255,255,.07)', borderRadius: 16, padding: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                         <Sparkles size={18} style={{ color: 'var(--sh-gold)' }} />
-                        <span style={{ fontWeight: 750, fontSize: 16 }}>Fortune Wheel</span>
-                        <span style={{ marginLeft: 'auto', fontSize: 12.5, opacity: 0.75 }}>
+                        <span style={{ fontWeight: 600, fontSize: 17 }}>Fortune Wheel</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 13, color: 'rgba(255,255,255,.62)' }}>
                             {loadError ? 'Unavailable' : spinLabel}
                         </span>
                     </div>
