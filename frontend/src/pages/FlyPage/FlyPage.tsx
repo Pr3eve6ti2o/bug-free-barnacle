@@ -106,9 +106,9 @@ export const FlyPage: FC = () => {
                 )}
 
                 {loadError && (
-                    <div className="p2e-card" style={{ margin: '14px auto', maxWidth: 420, textAlign: 'center' }}>
-                        <div style={{ fontWeight: 750, fontSize: 16, marginBottom: 6 }}>Couldn't load the game</div>
-                        <div style={{ fontSize: 13, opacity: 0.78, lineHeight: 1.45, marginBottom: 10 }}>{loadError}</div>
+                    <div className="p2e-card" style={{ margin: '12px auto', maxWidth: 430, textAlign: 'center' }}>
+                        <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 8 }}>Couldn't load the game</div>
+                        <div style={{ fontSize: 13, op
                         <button className="fly-action" onClick={() => void initialize()}>
                             <span>Retry</span>
                         </button>

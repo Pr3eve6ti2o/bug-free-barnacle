@@ -3,11 +3,11 @@
   flex-direction: column;
   min-height: 100dvh;
   padding: 84px 16px 120px;
-  max-width: 480px;
+  max-width: 430px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  gap: 14px;
+  gap: 12px;
 }
 
 /* — Segmented tabs — */
@@ -15,9 +15,9 @@
   display: flex;
   gap: 4px;
   padding: 4px;
-  border-radius: 999px;
-  border: 1px solid var(--sh-border-soft);
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #0b0d14;
   align-self: center;
   width: 100%;
   max-width: 320px;
@@ -25,21 +25,25 @@
 
 .tab-button {
   flex: 1;
-  padding: 9px 12px;
-  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
   border: none;
   background: none;
-  color: var(--sh-faint);
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition: color 160ms ease, background 160ms ease;
 }
 
 .tab-button.active {
-  background: rgba(255, 255, 255, 0.09);
-  color: var(--sh-text);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff
 }
 
 .tasks-list-container {
