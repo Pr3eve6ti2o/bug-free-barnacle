@@ -7,7 +7,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.game_state import GameState
 from app.services.p2e import is_og_active, REFERRAL_MILESTONES
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, List
@@ -26,12 +26,13 @@ async def _ensure_game_state(db: AsyncSession, user: Optional[User]) -> Optional
     if existing.scalar_one_or_none() is not None:
         return user
 
-    db.add(GameState(user_id=user.id))
     try:
-        await db.commit()
+        async with db.begin_nested():
+            db.add(GameState(user_id=user.id))
+            await db.flush()
     except IntegrityError:
         # A concurrent first-touch request created the row first.
-        await db.rollback()
+        pass
     return await get_user_by_telegram_id(db, user.telegram_id)
 
 
@@ -163,24 +164,25 @@ async def get_referral_stats(telegram_id: int, db: AsyncSession = Depends(get_db
     tier_map = {t: int(a) for t, a in tier_rows}
     # Per-friend contributions (direct crew only)
     friend_rows = (await db.execute(
-        select(ReferralEarning.from_user_id, func.coalesce(func.sum(ReferralEarning.amount), 0))
-        .where(ReferralEarning.referrer_id == user.id, ReferralEarning.tier == 1)
-        .group_by(ReferralEarning.from_user_id)
+        select(User, func.coalesce(func.sum(ReferralEarning.amount), 0))
+        .outerjoin(ReferralEarning, and_(
+            ReferralEarning.from_user_id == User.id,
+            ReferralEarning.referrer_id == user.id,
+            ReferralEarning.tier == 1,
+        ))
+        .where(User.referred_by_id == user.id)
+        .group_by(User.id)
     )).all()
-    friend_earned = {int(uid): int(a) for uid, a in friend_rows}
-    friends = []
-    if friend_earned:
-        frows = (await db.execute(
-            select(User).where(User.id.in_(list(friend_earned.keys())))
-        )).scalars().all()
-        for f in frows:
-            friends.append({
-                "telegram_id": f.telegram_id,
-                "username": f.username,
-                "earned_for_you": friend_earned.get(f.id, 0),
-                "qualified": (f.lifetime_mined or 0) >= 100,
-            })
-        friends.sort(key=lambda x: -x["earned_for_you"])
+    friends = [
+        {
+            "telegram_id": f.telegram_id,
+            "username": f.username,
+            "earned_for_you": int(earned or 0),
+            "qualified": (f.lifetime_mined or 0) >= 100,
+        }
+        for f, earned in friend_rows
+    ]
+    friends.sort(key=lambda x: -x["earned_for_you"])
     from app.services.p2e import tier1_share_rate
     return {
         "total_invites": total,

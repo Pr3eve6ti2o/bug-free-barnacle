@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.models.user import User
@@ -146,7 +146,7 @@ async def upgrade_boost(db: AsyncSession, telegram_id: int, boost_id: int):
     
     # Рассчитываем новую стоимость апгрейда
     new_level = user_boost.level
-    new_cost = boost.base_cost * (1.5 ** new_level) if new_level < boost.max_level else -1
+    new_cost = int(boost.base_cost * (1.5 ** new_level)) if new_level < boost.max_level else -1
     
     return {
         "boost_id": boost.id,

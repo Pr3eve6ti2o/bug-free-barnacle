@@ -82,6 +82,10 @@ async def claim_daily_bonus(telegram_id: int, db: AsyncSession):
             "current_day": bonus_data.current_day,
             "can_claim": False
         }
+    # Capture the day BEFORE the flush: a failed flush expires every ORM
+    # instance, so reading bonus_data.current_day inside the handler would
+    # trigger a lazy load on the failed transaction (PendingRollbackError).
+    cd = bonus_data.current_day
     db.add(DailyClaim(user_id=user.id, claim_date=today))
     try:
         await db.flush()
@@ -89,22 +93,28 @@ async def claim_daily_bonus(telegram_id: int, db: AsyncSession):
         await db.rollback()
         return {
             "error": "Already claimed today",
-            "current_day": bonus_data.current_day,
+            "current_day": cd,
             "can_claim": False
         }
 
     # 5. Выдаём бонус (atomic SQL-side credits — an ORM += can overwrite a
     # concurrent credit landing in the same instant)
     if daily_bonus.reward_type == "coins":
+        if user.game_state is None:
+            await db.rollback()
+            return {"error": "Game state missing, claim not applied"}
         amt = daily_bonus.reward_amount
-        await db.execute(
+        game_state_result = await db.execute(
             update(GameState).where(GameState.user_id == user.id)
             .values(balance=GameState.balance + amt)
         )
-        await db.execute(
+        daily_state_result = await db.execute(
             update(DailyGameState).where(DailyGameState.user_id == user.id)
             .values(balance=DailyGameState.balance + amt)
         )
+        if game_state_result.rowcount != 1 or daily_state_result.rowcount != 1:
+            await db.rollback()
+            return {"error": "Game state missing, claim not applied"}
         await db.refresh(user.game_state)
         
     elif daily_bonus.reward_type == "nft":
@@ -121,15 +131,24 @@ async def claim_daily_bonus(telegram_id: int, db: AsyncSession):
     streak_info = await get_streak_info(db, user.id)
     streak_awards = await award_streak_milestones(db, user, streak_info["streak"])
 
+    cd = bonus_data.current_day
+    uid = user.id
     try:
         await db.commit()
     except IntegrityError:
         # DailyClaim UNIQUE(user, date): a parallel claim won; this whole
         # transaction (including the balance credit above) rolls back.
         await db.rollback()
+        # Rollback expires every ORM instance, so re-check with a plain
+        # SELECT using values captured before the rollback.
+        winning_claim = (await db.execute(
+            select(DailyClaim).where(DailyClaim.user_id == uid, DailyClaim.claim_date == today)
+        )).scalar_one_or_none()
+        if winning_claim is None:
+            raise
         return {
             "error": "Already claimed today",
-            "current_day": bonus_data.current_day,
+            "current_day": cd,
             "can_claim": False
         }
     return {

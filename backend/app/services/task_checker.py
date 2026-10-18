@@ -230,6 +230,25 @@ async def claim_task_reward(db: AsyncSession, user_telegram_id: int, user_task_i
     if not user_task:
         return {"success": False, "error": "Task not found or already claimed"}
 
+    # Validate the reward payload before flipping any claim state: the
+    # atomic gate below must never mark a claimable task as claimed when
+    # the payout could not be issued anyway.
+    if user.game_state is None:
+        return {"success": False, "error": "Game state missing"}
+    task = user_task.task
+    if task is None:
+        return {"success": False, "error": "Task not found or already claimed"}
+
+    is_multiplier = getattr(task, "reward_type", "token") == "multiplier"
+    if is_multiplier:
+        pct = float(task.multiplier_pct or 0)
+        if pct < 0:
+            return {"success": False, "error": "Invalid task reward"}
+    else:
+        reward = task.reward
+        if reward is None or reward < 0:
+            return {"success": False, "error": "Invalid task reward"}
+
     # Atomic claim gate: exactly one concurrent claim flips the flag, and
     # the completion predicate is re-checked inside the same UPDATE — a
     # daily reset landing between the SELECT above and this gate cannot
@@ -246,18 +265,23 @@ async def claim_task_reward(db: AsyncSession, user_telegram_id: int, user_task_i
     user_task.is_claimed = True
 
     # Начисляем награду: токены на баланс или +% к скорости майнинга
-    task = user_task.task
-    if getattr(task, "reward_type", "token") == "multiplier":
-        pct = float(task.multiplier_pct or 0)
+    if is_multiplier:
         current = float(user.game_state.task_boost_pct or 0)
-        # SQL-side clamped increment (total task boost capped at +100%):
+        # SQL-side clamped increment (total task boost clamped to [0, 100]):
         # an ORM read-modify-write here lost one of two concurrent claims.
         boosted = func.coalesce(GameState.task_boost_pct, 0) + pct
-        await db.execute(
+        payout = await db.execute(
             update(GameState)
             .where(GameState.user_id == user.id)
-            .values(task_boost_pct=case((boosted > 100.0, 100.0), else_=boosted))
+            .values(task_boost_pct=case(
+                (boosted < 0.0, 0.0),
+                (boosted > 100.0, 100.0),
+                else_=boosted,
+            ))
         )
+        if payout.rowcount != 1:
+            await db.rollback()
+            return {"success": False, "error": "Game state missing"}
         await db.refresh(user.game_state)
         new_total = float(user.game_state.task_boost_pct or 0)
         await db.commit()
@@ -271,14 +295,16 @@ async def claim_task_reward(db: AsyncSession, user_telegram_id: int, user_task_i
             "task_id": user_task.id,
         }
 
-    reward = task.reward
     # Atomic SQL-side credit: an ORM += here could overwrite a concurrent
     # credit (mining claim, welcome) landing in the same instant.
-    await db.execute(
+    payout = await db.execute(
         update(GameState)
         .where(GameState.user_id == user.id)
         .values(balance=GameState.balance + reward)
     )
+    if payout.rowcount != 1:
+        await db.rollback()
+        return {"success": False, "error": "Game state missing"}
     await db.refresh(user.game_state)
 
     await db.commit()

@@ -139,15 +139,17 @@ async def telegram_auth_middleware(request: Request, call_next):
         # /admin but trusts admin_id) is an actor claim: it must be the signer.
         if any(c != uid for c in admin_claims):
             return JSONResponse(status_code=403, content={"detail": "Telegram identity mismatch"})
-        if subject_claims:
-            if any(c != uid for c in subject_claims):
-                return JSONResponse(status_code=403, content={"detail": "Telegram identity mismatch"})
-        else:
-            for seg in path.split("/"):
-                if seg.isdigit() and len(seg) >= 5:
-                    if int(seg) != uid:
-                        return JSONResponse(status_code=403, content={"detail": "Telegram identity mismatch"})
-                    break
+        if subject_claims and any(c != uid for c in subject_claims):
+            return JSONResponse(status_code=403, content={"detail": "Telegram identity mismatch"})
+        # The path check runs ALWAYS in the non-admin branch — never as an
+        # alternative to the claim check. A matching telegram_id claim must not
+        # suppress it, or a signed user could reach path-parameter endpoints
+        # (e.g. GET /api/game/state/{other_id}) belonging to another user.
+        for seg in path.split("/"):
+            if seg.isdigit() and len(seg) >= 5:
+                if int(seg) != uid:
+                    return JSONResponse(status_code=403, content={"detail": "Telegram identity mismatch"})
+                break
     # Ban enforcement: a suspended account's signed requests are refused
     # everywhere (admin routes included only via the allowlist anyway).
     if not path.startswith("/api/admin/"):

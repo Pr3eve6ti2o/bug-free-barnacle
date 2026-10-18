@@ -1,10 +1,12 @@
 from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 
 
 class UserBoost(Base):
     __tablename__ = "user_boosts"
+    __table_args__ = (UniqueConstraint("user_id", "boost_id", name="ux_user_boost"),)
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
