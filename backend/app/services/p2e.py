@@ -188,11 +188,27 @@ async def _pay_referral(db: AsyncSession, referrer: User, from_user: User,
         return
     if referrer.id == from_user.id:
         return  # never pay a user their own referral share
-    await atomic_credit(db, referrer, amount, referral_delta=amount)
-    db.add(ReferralEarning(
-        referrer_id=referrer.id, from_user_id=from_user.id,
-        amount=amount, tier=tier, kind=kind,
-    ))
+    if kind in ("qual", "milestone"):
+        exists = (await db.execute(
+            select(ReferralEarning.id).where(
+                ReferralEarning.referrer_id == referrer.id,
+                ReferralEarning.from_user_id == from_user.id,
+                ReferralEarning.kind == kind,
+            )
+        )).scalar_one_or_none()
+        if exists is not None:
+            return  # one-shot already paid (pre-check; the unique index is the race backstop)
+    from sqlalchemy.exc import IntegrityError
+    try:
+        async with db.begin_nested():
+            await atomic_credit(db, referrer, amount, referral_delta=amount)
+            db.add(ReferralEarning(
+                referrer_id=referrer.id, from_user_id=from_user.id,
+                amount=amount, tier=tier, kind=kind,
+            ))
+            await db.flush()
+    except IntegrityError:
+        return  # already paid (partial unique index)
 
 
 async def _load_user(db: AsyncSession, user_id: int) -> User | None:

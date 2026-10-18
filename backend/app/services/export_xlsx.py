@@ -148,7 +148,7 @@ async def _build_admin_actions(db, wb: Workbook) -> None:
 
 
 async def build_workbook(db) -> bytes:
-    """Build a two-sheet XLSX report (Summary, Players) and return it as bytes."""
+    """Build the five-sheet admin XLSX report (Summary, Players, Withdrawals, Referral Ledger, Admin Actions) and return it as bytes."""
     wb = Workbook()
     wb.remove(wb.active)
     await _build_summary(db, wb)

@@ -444,9 +444,10 @@ async def delete_task(task_id: int, admin_id: int, db: AsyncSession = Depends(ge
     t = (await db.execute(select(Task).where(Task.id == task_id))).scalar_one_or_none()
     if not t:
         raise HTTPException(status_code=404, detail="Task not found")
+    title = (t.title or "")[:60]
     await db.execute(UserTask.__table__.delete().where(UserTask.task_id == task_id))
     await db.delete(t)
-    await _log(db, admin_id, "task_delete", str(task_id), t.title[:60])
+    await _log(db, admin_id, "task_delete", str(task_id), title)
     await db.commit()
     return {"deleted": task_id}
 
@@ -585,6 +586,7 @@ async def export_actions(admin_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.get("/export.xlsx")
 async def export_workbook(admin_id: int, db: AsyncSession = Depends(get_db)):
+    require_admin(admin_id)
     from fastapi import Response
     from app.services.export_xlsx import build_workbook
     data = await build_workbook(db)

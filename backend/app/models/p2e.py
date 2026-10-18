@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from sqlalchemy import Column, Integer, String, BigInteger, Boolean, DateTime, Date, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, BigInteger, Boolean, DateTime, Date, ForeignKey, UniqueConstraint, Index, text
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -81,6 +81,16 @@ class WithdrawalRequest(Base):
 class ReferralEarning(Base):
     """Ledger of every referral payout — drives the Crew screen's per-friend earnings."""
     __tablename__ = "referral_earnings_ledger"
+    __table_args__ = (
+        Index(
+            "uq_referral_oneshot",
+            "referrer_id",
+            "from_user_id",
+            "kind",
+            unique=True,
+            sqlite_where=text("kind IN ('qual', 'milestone')"),
+        ),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     referrer_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)

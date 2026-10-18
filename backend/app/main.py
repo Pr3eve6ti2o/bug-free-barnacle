@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from fastapi.requests import Request
-from app.api import users, boosts, game, tasks, rating, nft, bonus, wallet
+from app.api import users, boosts, game, tasks, rating, bonus, wallet
 from app.api import mining, ogpass, withdraw
 from app.api import admin as admin_api
 from app.api import admin_ext as admin_ext_api
@@ -176,7 +176,6 @@ app.include_router(boosts.router, prefix="/api")
 app.include_router(game.router, prefix="/api/game")
 app.include_router(tasks.router, prefix="/api")
 app.include_router(rating.router, prefix="/api")
-app.include_router(nft.router, prefix="/api")
 app.include_router(bonus.router, prefix="/api")
 app.include_router(wallet.router, prefix="/api")
 app.include_router(mining.router, prefix="/api")
