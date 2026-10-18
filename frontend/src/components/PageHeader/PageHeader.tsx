@@ -155,7 +155,7 @@ export const PageHeader: React.FC = () => {
 
                     <button
                         className="p2e-btn p2e-btn-ghost"
-                        style={{ marginTop: 6 }}
+                        style={{ marginTop: 12, minHeight: 44 }}
                         onClick={() => { setShowHelpModal(false); setShowTermsModal(true); }}
                     >
                         Terms &amp; Conditions
