@@ -66,7 +66,31 @@ export function AppRouter() {
     return (
         <>
             <TelegramBackButton />
-            <Suspense fallback={<div style={{minHeight: "100vh", background: "#06070c"}} />}>
+            <Suspense
+                fallback={
+                    <div
+                        style={{
+                            minHeight: "100vh",
+                            background: "#06070c",
+                            display: "grid",
+                            placeItems: "center",
+                            padding: "16px",
+                            paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
+                        }}
+                    >
+                        <div
+                            aria-hidden="true"
+                            style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "999px",
+                                border: "2px solid rgba(255,255,255,.12)",
+                                borderTopColor: "rgba(255,255,255,.62)",
+                            }}
+                        />
+                    </div>
+                }
+            >
                 <Routes>
                     <Route path="/SpaceHunter" element={<Navigate to={FLY_PATH} replace />} />
                     <Route path="/SpaceHunter/" element={<Navigate to={FLY_PATH} replace />} />

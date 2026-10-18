@@ -133,20 +133,22 @@ export const FlyPage: FC = () => {
                     </div>
                 </div>
 
-                <div className="mining-ship" aria-hidden>
+                <div className="mining-ship fly-hero" aria-hidden>
                     <span className="ship-glow" />
                     <img src={ship} alt="" className="ship-image ship-float" />
                 </div>
 
-                <MiningCard
-                    telegramId={userId}
-                    onClaimed={(newBalance) => setBalance(newBalance)}
-                />
+                <div className="fly-action">
+                    <MiningCard
+                        telegramId={userId}
+                        onClaimed={(newBalance) => setBalance(newBalance)}
+                    />
+                </div>
 
-                <div style={{ textAlign: 'center', fontSize: 12.5, opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
+                <p className="fly-hint">
                     Mining runs for 6 hours per session. Boost your power with
                     tasks, crew invites and holdings — then come back to claim.
-                </div>
+                </p>
             </div>
         </Page>
     );
