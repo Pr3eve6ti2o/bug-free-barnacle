@@ -320,14 +320,14 @@ export const ArcadePage: FC = () => {
                 <div className="p2e-card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <MousePointerClick size={18} style={{ color: 'var(--sh-gold)' }} />
-                        <span style={{ fontWeight: 750, fontSize: 16 }}>The Button</span>
-                        <span style={{ marginLeft: 'auto', fontSize: 12.5, opacity: 0.75 }}>Community reactor</span>
+                        <span style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em' }}>The Button</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(255,255,255,.62)' }}>Community reactor</span>
                     </div>
-                    <p style={{ fontSize: 12.5, opacity: 0.65, margin: '6px 0 2px' }}>
+                    <p style={{ fontSize: 13, lineHeight: 1.45, color: 'rgba(255,255,255,.62)', margin: '6px 0 2px' }}>
                         One button, every hunter. Each {btn?.milestone_size.toLocaleString() ?? '1,000'} presses charge a
                         milestone chest of {btn?.chest_amount ?? 100} CSM for everyone who pressed at least {btn?.claim_min_presses ?? 10} times.
                     </p>
-                    <div className="tnum" style={{ textAlign: 'center', fontSize: 30, fontWeight: 850, marginTop: 8 }}>
+                    <div className="tnum" style={{ textAlign: 'center', fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em', marginTop: 10 }}>
                         {(btn?.total_presses ?? 0).toLocaleString()}
                     </div>
                     <div style={{ textAlign: 'center', fontSize: 12, opacity: 0.65 }}>total presses · yours: {(btn?.my_presses ?? 0).toLocaleString()}</div>
