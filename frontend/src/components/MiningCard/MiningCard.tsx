@@ -86,31 +86,31 @@ export const MiningCard: FC<Props> = ({ telegramId, onClaimed }) => {
     return (
       <div className="rate-breakdown">
         <div className="rate-row">
-          <span>Base rate</span><b>{breakdown.base}/h</b>
+          <span className="sh-label">Base rate</span><b className="tnum">{breakdown.base}/h</b>
         </div>
         <div className="rate-row">
-          <span>Referrals · {breakdown.qualified_referrals} qualified</span>
-          <b className={breakdown.referral_pct > 0 ? 'rate-up' : ''}>
+          <span className="sh-label">Referrals · {breakdown.qualified_referrals} qualified</span>
+          <b className={breakdown.referral_pct > 0 ? 'rate-up tnum' : 'tnum'}>
             +{breakdown.referral_pct}%
           </b>
         </div>
         <div className="rate-row">
-          <span>Holdings tier</span>
-          <b className={breakdown.holdings_mult > 1 ? 'rate-up' : ''}>
+          <span className="sh-label">Holdings tier</span>
+          <b className={breakdown.holdings_mult > 1 ? 'rate-up tnum' : 'tnum'}>
             ×{breakdown.holdings_mult.toFixed(2).replace(/\.?0+$/, '')}
           </b>
         </div>
         <div className="rate-row">
           <span>Task boost</span>
-          <b className={breakdown.task_boost_pct > 0 ? 'rate-up' : ''}>
+          <b className={`tnum ${breakdown.task_boost_pct > 0 ? 'rate-up' : ''}`.trim()}>
             +{breakdown.task_boost_pct}%
           </b>
         </div>
         {breakdown.og_active && (
-          <div className="rate-row"><span>OG Pass</span><b className="rate-up">×2</b></div>
+          <div className="rate-row"><span>OG Pass</span><b className="rate-up tnum">×2</b></div>
         )}
         {breakdown.verified && (
-          <div className="rate-row"><span>Verified profile</span><b className="rate-up">+10%</b></div>
+          <div className="rate-row"><span>Verified profile</span><b className="rate-up tnum">+10%</b></div>
         )}
         <div className="rate-cta">
           {breakdown.qualified_referrals < 20

@@ -211,17 +211,17 @@ export const MePage: FC = () => {
     <Page back={false}>
       <div className="me-page-container">
         {/* Profile */}
-        <div className="p2e-card" style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+        <div className="p2e-card" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div className="friend-avatar" style={{ width: 52, height: 52, flexShrink: 0 }}>
-            <div className="friend-avatar-placeholder" style={{ fontSize: 21 }}>
+            <div className="friend-avatar-placeholder" style={{ fontSize: 20 }}>
               {getInitial(displayName)}
             </div>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 750, fontSize: 17, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontWeight: 600, fontSize: 17, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {displayName}
             </div>
-            <div style={{ fontSize: 12.5, opacity: 0.7 }}>
+            <div style={{ fontSize: 13, opacity: 0.62 }}>
               ID {userId} · Level {level ?? '—'}
             </div>
           </div>

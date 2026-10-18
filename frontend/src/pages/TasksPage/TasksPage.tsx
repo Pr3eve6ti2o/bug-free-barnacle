@@ -145,8 +145,8 @@ export const TasksPage: FC = () => {
     <Page back={false}>
       <div className="tasks-page-container">
         <div className="tasks-head">
-          <div style={{ fontWeight: 800, fontSize: 19 }}>Starter tasks</div>
-          <div style={{ fontSize: 13, opacity: 0.72, marginTop: 3, lineHeight: 1.45 }}>
+          <div style={{ fontWeight: 600, fontSize: 22, letterSpacing: "-0.01em" }}>Starter tasks</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.62)", marginTop: 4, lineHeight: 1.45 }}>
             Earn CSM tokens or permanent mining-power boosts. Progress is
             checked automatically — rewards unlock as soon as a task is done.
           </div>
@@ -157,11 +157,11 @@ export const TasksPage: FC = () => {
             role="alert"
             style={{
               marginBottom: 12,
-              padding: "10px 12px",
-              borderRadius: 10,
-              background: "#0d0f18",
-              border: "1px solid #f5c518",
-              color: "#f5c518",
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "#10121c",
+              border: "1px solid rgba(255,255,255,.07)",
+              color: "rgba(255,255,255,.86)",
               fontSize: 13,
             }}
           >
@@ -176,7 +176,7 @@ export const TasksPage: FC = () => {
             role="alert"
             style={{
               padding: 14,
-              borderRadius: 12,
+              borderRadius: 16,
               background: "rgba(255, 90, 90, 0.08)",
               border: "1px solid rgba(255, 90, 90, 0.25)",
               textAlign: "center",
@@ -200,11 +200,11 @@ export const TasksPage: FC = () => {
                     <div className="task-header">
                       <span className="task-description">{userTask.task.title}</span>
                       {userTask.task.reward_type === 'multiplier' ? (
-                        <span className="task-reward task-reward-boost">
+                        <span className="task-reward task-reward-boost tnum">
                           +{userTask.task.multiplier_pct}% mining power
                         </span>
                       ) : (
-                        <span className="task-reward">
+                        <span className="task-reward tnum">
                           +{userTask.task.reward} CSM
                         </span>
                       )}
@@ -217,7 +217,7 @@ export const TasksPage: FC = () => {
                           width: `${Math.min(100, (userTask.progress / userTask.task.condition_value) * 100)}%`
                         }}
                       ></div>
-                      <span className="task-progress-text">
+                      <span className="task-progress-text tnum">
                         {Math.min(userTask.progress, userTask.task.condition_value)}/{userTask.task.condition_value}
                       </span>
                     </div>

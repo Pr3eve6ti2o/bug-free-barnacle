@@ -147,14 +147,14 @@ export const BoostPage: FC = () => {
     <Page back={false}>
       <div className="boost-page-container">
         <OgPassCard telegramId={userId} balance={balance} onPurchased={setBalance} />
-        <div style={{ height: 14 }} />
+        <div style={{ height: 12 }} />
         {/* Категории бустов */}
         <div className="boost-categories-container">
           {categories.map(({ id, name }) => (
             <button
               key={id}
               onClick={() => setSelectedCategory(id)}
-              className={`boost-category-card ${
+              className={`boost-category-card sh-label ${
                 selectedCategory === id
                   ? 'boost-category-active'
                   : 'boost-category-inactive'
@@ -209,20 +209,20 @@ export const BoostPage: FC = () => {
                 <p className="boost-description">{selectedBoost.description}</p>
                 <div className="boost-stats">
                   <div className="boost-stat-row">
-                    <span>Level</span>
+                    <span className="sh-label">Level</span>
                     <span className="tnum">{selectedBoost.level} / {selectedBoost.max_level}</span>
                   </div>
                   <div className="boost-stat-row">
-                    <span>Passive income</span>
+                    <span className="sh-label">Passive income</span>
                     <span className="tnum boost-stat-accent">+{(selectedBoost.passive_income * (1.5 ** selectedBoost.level)).toFixed(1)} CSM/h</span>
                   </div>
                   <div className="boost-stat-row">
-                    <span>Tap power</span>
+                    <span className="sh-label">Tap power</span>
                     <span className="tnum">+{Math.round(selectedBoost.click_multiplier * 20 * (1.5 ** selectedBoost.level))}%</span>
                   </div>
                   {selectedBoost.level < selectedBoost.max_level ? (
                     <div className="boost-stat-row">
-                      <span>Upgrade cost</span>
+                      <span className="sh-label">Upgrade cost</span>
                       <span className="tnum boost-stat-accent">{selectedBoost.current_cost.toLocaleString()} CSM</span>
                     </div>
                   ) : null}

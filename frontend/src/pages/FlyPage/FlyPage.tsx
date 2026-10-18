@@ -95,12 +95,12 @@ export const FlyPage: FC = () => {
             <div className="fly-page-container">
                 {announcement && (
                     <div style={{
-                        display: 'flex', alignItems: 'center', gap: 9, width: '100%',
-                        marginBottom: 12, padding: '11px 14px', borderRadius: 14,
-                        background: 'rgba(245,197,24,0.1)', border: '1px solid rgba(245,197,24,0.4)',
-                        fontSize: 13.5, fontWeight: 600, lineHeight: 1.35,
+                        display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                        marginBottom: 12, padding: '12px 14px', borderRadius: 16,
+                        background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
+                        fontSize: 13, fontWeight: 600, lineHeight: 1.4,
                     }}>
-                        <span style={{ fontSize: 15 }}>📣</span>
+                        <span style={{ fontSize: 14 }}>📣</span>
                         <span>{announcement}</span>
                     </div>
                 )}

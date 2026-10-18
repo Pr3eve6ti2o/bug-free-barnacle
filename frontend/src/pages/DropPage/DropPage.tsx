@@ -156,7 +156,7 @@ export const DropPage: FC = () => {
           <div className="sh-label balance-title">Balance</div>
           <div className="coins-amount tnum">
             {balance === null ? '—' : balance.toFixed(0)}
-            {balance !== null && <span className="coins-unit">CSM</span>}
+            {balance !== null && <span className="coins-unit sh-label">CSM</span>}
           </div>
           {balanceError && (
             <button className="balance-retry" onClick={fetchBalance} disabled={isBalanceLoading}>
@@ -182,7 +182,7 @@ export const DropPage: FC = () => {
               <p className="wallet-address tnum" onClick={copyWalletAddress} title="Tap to copy">
                 {`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
               </p>
-              <p className="wallet-connected-text">Wallet connected</p>
+              <p className="wallet-connected-text sh-label">Wallet connected</p>
             </div>
             <button className="connect-wallet-button ghost" onClick={disconnectWallet}>
               <Wallet className="wallet-icon" />
@@ -194,12 +194,12 @@ export const DropPage: FC = () => {
             <div className="wallet-info">
               <span
                 className="wallet-status-dot"
-                style={{ background: 'rgba(138, 143, 156, 0.6)', boxShadow: 'none' }}
+                style={{ background: 'rgba(255, 255, 255, 0.62)', boxShadow: 'none' }}
               />
               <p className="wallet-address tnum" onClick={copyWalletAddress} title="Tap to copy">
                 {`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
               </p>
-              <p className="wallet-connected-text">Wallet linked — reconnect to withdraw</p>
+              <p className="wallet-connected-text sh-label">Wallet linked — reconnect to withdraw</p>
             </div>
             <button className="connect-wallet-button" onClick={connectWallet}>
               <Wallet className="wallet-icon" />
