@@ -482,7 +482,7 @@ export const AdminPage: FC = () => {
                                     {w.tx_hash ? ` · tx ${w.tx_hash.slice(0, 18)}…` : ''}
                                 </div>
                                 {w.status === 'pending' && (
-                                    <div style={{ display: 'flex', gap: 8 }}>
+                                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                                         <Button style={{ flex: 1 }} onClick={() => reviewW(w, 'approve')}>Approve</Button>
                                         <Button style={{ flex: 1, background: '#b91c1c' }} onClick={() => reviewW(w, 'reject')}>Reject + refund</Button>
                                     </div>
@@ -640,7 +640,7 @@ export const AdminPage: FC = () => {
                             <div className="p2e-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                 <div>
                                     <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6 }}>Payout proofs channel</div>
-                                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,.62)', margin: '0 0 10px' }}>
+                                    <p style={{ fontSize: 13, lineHeight: 1.55, color: 'rgba(255,255,255,.62)', margin: '0 0 12px' }}>
                                         Create a Telegram channel, add @FARMGradientbot as an admin, and paste its
                                         @username or ID here. Real payouts you mark paid are posted there automatically.
                                     </p>
@@ -660,7 +660,7 @@ export const AdminPage: FC = () => {
                                 {comms.digest_enabled && (
                                     <div>
                                         <span style={labelStyle}>Digest hour (UTC, 0–23)</span>
-                                        <div style={{ display: 'flex', gap: 8 }}>
+                                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                                             <input style={inputStyle} type="number" value={comms.digest_hour_utc}
                                                 onChange={e => setComms({ ...comms, digest_hour_utc: Number(e.target.value) })} />
                                             <Button onClick={() => saveComms({ digest_hour_utc: comms.digest_hour_utc })}>Save</Button>

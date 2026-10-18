@@ -407,14 +407,14 @@ export const MePage: FC = () => {
             <div className="sh-label" style={{ marginBottom: 8 }}>Recent payouts</div>
             {payouts.map((p, i) => (
               <div key={i} className="me-feed-row">
-                <span style={{ fontWeight: 600 }}>{p.name}</span>
-                <span style={{ opacity: 0.65, fontSize: 12.5 }}>
+                <span style={{ fontWeight: 600, fontSize: 15, color: 'rgba(255,255,255,.92)' }}>{p.name}</span>
+                <span style={{ color: 'rgba(255,255,255,.62)', fontSize: 13 }}>
                   {p.kind === 'withdrawal' ? 'withdrew' : 'earned from crew'}
                 </span>
-                <span className="tnum" style={{ color: 'var(--sh-gold)', fontWeight: 700 }}>
+                <span className="tnum" style={{ color: 'var(--sh-gold)', fontWeight: 600, fontSize: 15 }}>
                   {p.amount.toLocaleString('en-GB')} CSM
                 </span>
-                <span style={{ opacity: 0.55, fontSize: 12 }}>{timeAgo(p.created_at)}</span>
+                <span style={{ color: 'rgba(255,255,255,.45)', fontSize: 11 }}>{timeAgo(p.created_at)}</span>
               </div>
             ))}
           </div>
