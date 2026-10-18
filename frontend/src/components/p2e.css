@@ -3,10 +3,10 @@
 .p2e-card {
   background: var(--sh-surface);
   border: 1px solid var(--sh-border);
-  border-radius: 18px;
-  padding: 18px;
+  border-radius: 16px;
+  padding: 16px;
   width: 100%;
-  max-width: 480px;
+  max-width: 430px;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -14,8 +14,8 @@
 .p2e-card-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 14px;
   color: var(--sh-dim);
 }
 
@@ -23,7 +23,7 @@
   color: var(--sh-faint);
   font-size: 13px;
   text-align: center;
-  padding: 12px 0;
+  padding: 16px 0;
 }
 
 .p2e-btn {
@@ -31,14 +31,14 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 48px;
-  padding: 12px 20px;
+  min-height: 54px;
+  padding: 15px 20px;
   border-radius: 14px;
   border: 1px solid var(--sh-border);
   background: rgba(255, 255, 255, 0.05);
   color: var(--sh-text);
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
   box-sizing: border-box;
@@ -108,9 +108,10 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 34px;
-  font-weight: 750;
-  letter-spacing: 0.02em;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
   color: var(--sh-text);
 }
 
@@ -124,7 +125,7 @@
 .mining-progress {
   height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   margin-top: 12px;
   overflow: hidden;
 }
@@ -133,13 +134,13 @@
   height: 100%;
   border-radius: 999px;
   background: var(--sh-accent);
-  transition: width 1s linear;
+  transition: width 200ms ease;
 }
 
 .mining-ready {
   text-align: center;
-  font-size: 26px;
-  font-weight: 750;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--sh-accent-text);
   margin: 4px 0 12px;
 }
@@ -153,7 +154,7 @@
 
 .mining-question {
   font-size: 28px;
-  font-weight: 750;
+  font-weight: 600;
   color: var(--sh-text);
 }
 
@@ -191,7 +192,7 @@
 .p2e-bar {
   height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
 
@@ -207,9 +208,9 @@
   gap: 6px;
   padding: 5px 12px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   border: 1px solid var(--sh-border);
   color: var(--sh-dim);
   white-space: nowrap;
@@ -232,9 +233,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 4px;
+  padding: 8px 4px;
   border-bottom: 1px solid var(--sh-border-soft);
   min-width: 0;
+  min-height: 56px;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .p2e-row:last-child {
@@ -242,12 +246,13 @@
 }
 
 .p2e-rank {
-  width: 28px;
+  width: 26px;
   flex-shrink: 0;
   text-align: center;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sh-faint);
+  font-variant-numeric: tabular-nums;
 }
 
 .p2e-row-main {
@@ -256,8 +261,8 @@
 }
 
 .p2e-row-name {
-  font-size: 14px;
-  font-weight: 650;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--sh-text);
   white-space: nowrap;
   overflow: hidden;
@@ -268,16 +273,19 @@
 }
 
 .p2e-row-sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--sh-faint);
   margin-top: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
 .p2e-row-value {
   flex-shrink: 0;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--sh-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .p2e-row.me {

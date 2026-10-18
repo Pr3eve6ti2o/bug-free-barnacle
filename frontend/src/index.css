@@ -33,7 +33,7 @@ html {
   --color-popover: var(--sh-surface-2);
   --color-popover-foreground: var(--sh-text);
   --color-primary: var(--sh-accent);
-  --color-primary-foreground: #1a1405;
+  --color-primary-foreground: #06070c;
   --color-secondary: var(--sh-surface-2);
   --color-secondary-foreground: var(--sh-text);
   --color-muted: var(--sh-surface-2);
@@ -54,11 +54,18 @@ html {
 body {
   background-color: var(--sh-bg);
   color: var(--sh-text);
-  font-family: var(--sh-font);
-  padding: 0;
+  font-family: var(--sh-font), -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  padding-block: 0;
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
   position: relative;
   min-height: 100dvh;
 }
