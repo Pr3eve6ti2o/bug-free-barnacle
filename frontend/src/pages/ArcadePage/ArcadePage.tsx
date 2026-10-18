@@ -237,7 +237,7 @@ export const ArcadePage: FC = () => {
                 </p>
 
                 {/* ------- Spin wheel (from StoryVibe's casino) ------- */}
-                <div className="p2e-card" style={{ marginBottom: 14 }}>
+                <div className="p2e-card" style={{ marginBottom: 16, background: '#0b0d14', border: '1px solid rgba(255,255,255,.07)', borderRadius: 16, padding: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                         <Sparkles size={18} style={{ color: 'var(--sh-gold)' }} />
                         <span style={{ fontWeight: 750, fontSize: 16 }}>Fortune Wheel</span>
@@ -259,10 +259,10 @@ export const ArcadePage: FC = () => {
                             className="wheel-hub"
                             disabled={spinning || !arcade}
                             onClick={spin}
-                            style={{ border: 0, padding: 0, appearance: 'none' }}
+                            style={{ border: 0, padding: 0, appearance: 'none', lineHeight: 1, letterSpacing: '0.02em' }}
                         >SPIN</button>
                     </div>
-                    <div style={{ minHeight: 22, textAlign: 'center', fontWeight: 700, fontSize: 14.5, color: 'var(--sh-gold)', margin: '6px 0 8px' }}>
+                    <div style={{ minHeight: 22, textAlign: 'center', fontWeight: 600, fontSize: 13, lineHeight: 1.4, letterSpacing: '0.01em', fontVariantNumeric: 'tabular-nums', color: 'var(--sh-gold)', margin: '8px 0 10px' }}>
                         {wheelMsg}
                     </div>
                     <Button className="w-full" disabled={spinning || !arcade} onClick={spin}>
