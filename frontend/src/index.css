@@ -3,16 +3,16 @@
 /* ——— Space Hunter · sleek minimal theme ——— */
 :root {
   --sh-bg: #06070c;
-  --sh-bg-2: #0a0c14;
-  --sh-surface: #0e1119;
-  --sh-surface-2: #121623;
-  --sh-border: rgba(255, 255, 255, 0.08);
+  --sh-bg-2: #0a0b11;
+  --sh-surface: #0b0d14;
+  --sh-surface-2: #10121c;
+  --sh-border: rgba(255, 255, 255, 0.07);
   --sh-border-soft: rgba(255, 255, 255, 0.05);
   --sh-text: #f4f6fb;
-  --sh-dim: rgba(244, 246, 251, 0.58);
-  --sh-faint: rgba(244, 246, 251, 0.34);
+  --sh-dim: rgba(244, 246, 251, 0.62);
+  --sh-faint: rgba(244, 246, 251, 0.40);
   --sh-accent: #f5c518;
-  --sh-accent-soft: rgba(245, 197, 24, 0.12);
+  --sh-accent-soft: rgba(245, 197, 24, 0.10);
   --sh-accent-text: #ffd94d;
   --sh-good: #3ddc97;
   --sh-bad: #ff7a7a;
@@ -68,6 +68,9 @@ body {
   overscroll-behavior-y: none;
   position: relative;
   min-height: 100dvh;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Whisper-quiet starfield: a few faint dots + soft ambient glows, no noise */
@@ -90,8 +93,8 @@ body::before {
     radial-gradient(1px 1px at 78% 62%, rgba(255, 255, 255, 0.4), transparent 60%),
     radial-gradient(1px 1px at 92% 84%, rgba(255, 255, 255, 0.3), transparent 60%),
     radial-gradient(1px 1px at 16% 88%, rgba(255, 255, 255, 0.35), transparent 60%),
-    radial-gradient(120% 55% at 50% -10%, rgba(96, 120, 255, 0.06), transparent 60%),
-    radial-gradient(100% 45% at 50% 112%, rgba(245, 197, 24, 0.035), transparent 60%);
+    radial-gradient(120% 55% at 50% -10%, rgba(255, 255, 255, 0.025), transparent 60%),
+    radial-gradient(100% 45% at 50% 112%, rgba(255, 255, 255, 0.018), transparent 60%);
   background-color: var(--sh-bg);
 }
 
@@ -99,13 +102,14 @@ body::before {
 .tnum {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
 }
 
 /* Small caps section label */
 .sh-label {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--sh-faint);
 }
@@ -113,6 +117,8 @@ body::before {
 button {
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+  touch-action: manipulation;
 }
 
 /* ——— Ambient nebula: slow-breathing deep-space glows above the starfield ——— */
@@ -122,10 +128,7 @@ button {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(60% 38% at 18% 6%, rgba(99, 102, 241, 0.10), transparent 65%),
-    radial-gradient(52% 34% at 85% 22%, rgba(168, 85, 247, 0.07), transparent 65%),
-    radial-gradient(70% 42% at 50% 108%, rgba(245, 197, 24, 0.055), transparent 62%);
-  animation: sh-nebula-breathe 14s ease-in-out infinite alternate;
+    radial-gradient(80% 50% at 50% 0%, rgba(255, 255, 255, 0.03), transparent 70%);
 }
 @keyframes sh-nebula-breathe {
   from { opacity: 0.75; transform: scale(1); }

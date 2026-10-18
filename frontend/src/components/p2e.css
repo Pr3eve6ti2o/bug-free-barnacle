@@ -53,11 +53,15 @@
 .p2e-btn-gold {
   background: var(--sh-accent);
   border-color: var(--sh-accent);
-  color: #1a1405;
+  color: #06070c;
+  min-height: 54px;
+  border-radius: 14px;
+  font-weight: 600;
 }
 
 .p2e-btn-ghost {
   background: transparent;
+  min-height: 44px;
 }
 
 .p2e-input {
@@ -93,14 +97,14 @@
 .p2e-note {
   margin-top: 10px;
   color: var(--sh-faint);
-  font-size: 12px;
+  font-size: 13px;
   text-align: center;
   line-height: 1.5;
 }
 
 /* Mining card */
 .mining-card {
-  margin-top: 4px;
+  margin-top: 12px;
 }
 
 .mining-timer {
