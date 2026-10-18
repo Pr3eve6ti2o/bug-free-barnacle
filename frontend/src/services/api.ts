@@ -602,7 +602,7 @@ export const adminApi = {
   getActions: (adminId: number | string) =>
     api.get<any, { actions: AdminAction[] }>(`/admin/actions?admin_id=${adminId}`),
   exportActions: (adminId: number | string) =>
-    api.get<any, Blob>(`/admin/actions/export?admin_id=${adminId}`, { responseType: 'blob' }),
+    api.get<any, Blob>(`/admin/export.xlsx?admin_id=${adminId}`, { responseType: 'blob' }),
   listWithdrawals: (adminId: number | string, status = '') =>
     api.get<any, { withdrawals: AdminWithdrawal[]; counts: Record<string, number>; paid_total: number }>(
       `/admin/withdrawals?admin_id=${adminId}${status ? `&status=${status}` : ''}`),

@@ -581,3 +581,11 @@ async def export_actions(admin_id: int, db: AsyncSession = Depends(get_db)):
         lines.append(",".join([str(r.created_at), str(r.admin_id), cell(r.action), cell(r.target), cell(r.detail)]))
     return PlainTextResponse("\n".join(lines), media_type="text/csv",
                              headers={"Content-Disposition": "attachment; filename=admin-actions.csv"})
+
+
+@router.get("/export.xlsx")
+async def export_workbook(admin_id: int, db: AsyncSession = Depends(get_db)):
+    from fastapi import Response
+    from app.services.export_xlsx import build_workbook
+    data = await build_workbook(db)
+    return Response(content=data, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=spacehunter-export.xlsx"})

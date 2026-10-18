@@ -264,7 +264,7 @@ export const AdminPage: FC = () => {
             const blob = await adminApi.exportActions(userId);
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'admin-actions.csv'; a.click();
+            a.href = url; a.download = 'spacehunter-export.xlsx'; a.click();
             URL.revokeObjectURL(url);
         } catch (e) { fail(e); }
     };
@@ -362,7 +362,7 @@ export const AdminPage: FC = () => {
                         <div className="p2e-card">
                             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                                 <div style={{ fontWeight: 750, flex: 1 }}>Recent admin actions</div>
-                                <Button variant="outline" onClick={downloadExport}>Export CSV</Button>
+                                <Button variant="outline" onClick={downloadExport}>Export Excel</Button>
                             </div>
                             {actions.length === 0 && <div style={{ opacity: 0.6, fontSize: 13 }}>No actions yet.</div>}
                             {actions.map((a, i) => (
