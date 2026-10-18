@@ -1,365 +1,163 @@
-# 🚀 Space Hunter - Web3 Gaming Platform
+# SpaceHunter (Gradient Farming)
 
-<div align="center">
+A play-to-earn Telegram Mini App where players farm CSM (in-game coins) — FastAPI backend, React + TypeScript frontend, a Telegram bot entry point, and TON smart contracts in FunC.
 
-![Space Hunter Logo](frontend/public/Space_Hunter_Logo.png)
+## Features
 
-**Современное full-stack Telegram Mini App с интеграцией блокчейна, NFT механиками и геймифицированным пользовательским опытом**
+**Player**
+- Full game loop inside Telegram as a Mini App; play state and balances are server-authoritative.
+- Entry via the bot `@FARMGradientbot` ("Gradient Farming"): `/start` returns an inline **Play** button that opens the game as a `web_app`, and the chat menu button (**Play**) deep-links straight to the game URL.
+- Referral invites use `?start=` deep links, registered server-side at the moment the payload is received.
+- On-chain assets on TON: jetton (CSM) and NFT collection/item contracts.
 
-</div>
+**Admin**
+- Admin surface gated behind configured Telegram admin IDs.
+- One-off migration script provisions the admin panel schema.
 
-## 🎯 Обзор проекта
+**Security**
+- Optional authentication layer (`SPACEHUNTER_AUTH`) — when enabled, the game refuses unauthenticated play.
+- Server-side referral registration; no client-trusted identity.
+- Payout paths verified exact-once: live race and double-pay exploit probes re-confirmed no duplicate payouts.
+- Dedicated security-fix migration for hardening existing data.
+- Single-origin serving — the frontend is mounted on the same uvicorn process as the API, so no CORS surface is exposed.
 
-Space Hunter — это сложная Web3 игровая платформа, созданная как Telegram Mini App, демонстрирующая продвинутые навыки full-stack разработки с использованием современных технологий, включая React, FastAPI, PostgreSQL и интеграцию с блокчейном TON. Проект демонстрирует экспертизу в:
+## Tech stack
 
-- **Full-Stack разработке**: Полная сквозная архитектура приложения
-- **Интеграции блокчейна**: Подключение TON кошельков и взаимодействие со смарт-контрактами
-- **Современных веб-технологиях**: React 18, TypeScript, FastAPI, PostgreSQL
-- **Контейнеризации**: Инфраструктура развертывания на основе Docker
-- **Разработке игр**: Увлекательная механика с интеграцией NFT и реферальными системами
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI (Python), SQLite in WAL mode (`demo.db`) |
+| Frontend | React + Vite + TypeScript |
+| Bot | `bot_runner.py` (Telegram Bot API) |
+| Contracts | FunC — jetton minter/wallet, NFT collection/item |
+| Serving | `demo_serve.py` — uvicorn on `:8000`, API plus `frontend/dist` mounted as StaticFiles at `/SpaceHunter` |
+| Migrations | Alembic (`backend/alembic/`) plus one-off Python scripts |
 
-### 🌟 Ключевые особенности
+## Prerequisites
 
-- 🎮 **Интерактивная игра**: Космическая idle-игра с системой энергии
-- 🔗 **Интеграция TON кошелька**: Подключение и управление TON криптовалютными кошельками
-- 🎨 **NFT система**: Собирайте, торгуйте и управляйте уникальными космическими NFT
-- 👥 **Реферальная программа**: Многоуровневая реферальная система с наградами
-- 🏆 **Ежедневные задания**: Увлекательная система квестов с отслеживанием прогресса
-- ⚡ **Обновления в реальном времени**: Живая синхронизация состояния игры
-- 💎 **Система улучшений**: Механика апгрейдов для улучшения геймплея
-- 📊 **Таблицы лидеров**: Система соревновательного рейтинга
-- 🎁 **Ежедневные бонусы**: Система наград, поощряющая регулярное участие
+- Python 3 with a virtualenv at `~/workspace/spacehunter-demo/venv`
+- Node.js with `npm` / `npx` available on `PATH`
+- A Telegram bot token and the TON API endpoint for your network
+- Optional: a tunnel client (pinggy) if you need public access
 
-## 🏗️ Архитектура и технологический стек
+## Installation
 
-### Backend (FastAPI + PostgreSQL)
-```
-backend/
-├── app/
-│   ├── api/           # RESTful API endpoints
-│   ├── models/        # SQLAlchemy database models
-│   ├── schemas/       # Pydantic request/response schemas
-│   ├── crud/          # Database operations
-│   ├── services/      # Business logic layer
-│   ├── background/    # Async background tasks
-│   └── scripts/       # Database utilities
-├── alembic/           # Database migrations
-└── Dockerfile         # Container configuration
-```
-
-**Технологии:**
-- **FastAPI**: Высокопроизводительный асинхронный веб-фреймворк
-- **SQLAlchemy**: Продвинутый ORM с поддержкой async
-- **PostgreSQL**: Надежная реляционная база данных
-- **Alembic**: Управление миграциями базы данных
-- **Uvicorn**: ASGI сервер для продакшн развертывания
-
-### Frontend (React + TypeScript)
-```
-frontend/
-├── src/
-│   ├── components/    # Reusable UI components
-│   ├── pages/         # Application pages/routes
-│   ├── services/      # API integration services
-│   ├── types/         # TypeScript type definitions
-│   ├── helpers/       # Utility functions
-│   └── navigation/    # Routing configuration
-├── assets/            # Static assets and images
-└── public/            # Public static files
-```
-
-**Технологии:**
-- **React 18**: Современная UI библиотека с хуками
-- **TypeScript**: Типобезопасная разработка на JavaScript
-- **Telegram Mini Apps SDK**: Нативная интеграция с Telegram
-- **TON Connect UI**: Подключение блокчейн кошельков
-- **TailwindCSS**: CSS фреймворк utility-first подхода
-- **Vite**: Быстрый инструмент сборки и сервер разработки
-- **React Router**: Клиентская маршрутизация
-
-### Smart Contracts (TON Blockchain)
-```
-SmartContracts/
-├── contracts/         # FunC smart contract sources
-│   ├── jetton_minter.fc    # Token minting contract
-│   ├── jetton_wallet.fc    # Token wallet contract
-│   ├── nft_collection.fc   # NFT collection contract
-│   └── nft_item.fc         # Individual NFT contract
-├── wrappers/          # TypeScript contract wrappers
-└── scripts/           # Deployment and interaction scripts
-```
-
-**Технологии:**
-- **TON Blockchain**: Открытая сеть для смарт-контрактов
-- **FunC**: Язык программирования смарт-контрактов TON
-- **Blueprint**: Фреймворк разработки для TON
-- **Jest**: Фреймворк тестирования смарт-контрактов
-
-### Инфраструктура и DevOps
-- **Docker & Docker Compose**: Контейнеризованное развертывание
-- **PostgreSQL**: Продакшн база данных с постоянством данных
-- **CORS Configuration**: Обработка межсайтовых запросов
-- **Environment Management**: Безопасное управление конфигурацией
-- **Background Tasks**: Автоматизированный пассивный доход и восстановление энергии
-
-## 🎮 Игровые механики
-
-### Основной геймплей
-- **Система энергии**: Игроки тратят энергию на действия с автоматическим восстановлением
-- **Пассивный доход**: Непрерывная генерация ресурсов на основе улучшений
-- **Клик-майнинг**: Активная игровая механика для сбора ресурсов
-- **Система прогрессии**: Продвижение по уровням с наградами за разблокировку
-
-### Экономическая модель
-- **Виртуальная валюта**: Внутриигровые токены для покупок и улучшений
-- **NFT интеграция**: Коллекционные космические активы с утилитой
-- **Система усилений**: Постоянные улучшения, влияющие на игровые механики
-- **Реферальные награды**: Многоуровневая комиссионная система
-
-### Социальные функции
-- **Таблицы лидеров**: Глобальная система рейтинга
-- **Реферальная сеть**: Приглашайте друзей для взаимной выгоды
-- **Ежедневные вызовы**: Ограниченные по времени задания со специальными наградами
-- **Система достижений**: Отслеживание прогресса и награды за этапы
-
-## 🔌 API архитектура
-
-### Основные эндпоинты
-
-#### Управление пользователями
-- `POST /api/register` - Регистрация пользователя с поддержкой рефералов
-- `GET /api/user/{telegram_id}` - Получение профиля и статистики пользователя
-- `PUT /api/user/{telegram_id}/wallet` - Обновление адреса TON кошелька
-
-#### Игровые механики
-- `POST /api/game/click` - Обработка кликов майнинга с потреблением энергии
-- `GET /api/game/state/{telegram_id}` - Получение текущего состояния игры
-- `POST /api/game/collect-passive` - Сбор накопленного пассивного дохода
-
-#### NFT и блокчейн
-- `GET /api/nfts/{telegram_id}` - Список NFT коллекции пользователя
-- `POST /api/nfts/mint` - Создание нового NFT для пользователя
-- `GET /api/wallet/balance` - Проверка баланса TON кошелька
-
-#### Социальные функции и прогрессия
-- `GET /api/tasks/{telegram_id}` - Получение доступных заданий
-- `POST /api/tasks/complete` - Отметка выполнения задания
-- `GET /api/rating/leaderboard` - Данные глобальной таблицы лидеров
-- `POST /api/bonus/daily` - Получение ежедневных бонусных наград
-
-### Схема базы данных
-
-#### Основные модели
-```python
-# User model with referral system
-class User(Base):
-    telegram_id: BigInteger      # Telegram user ID
-    username: String             # Telegram username
-    ton_wallet_address: String   # Connected TON wallet
-    referred_by_id: Integer      # Referral parent
-    created_at: DateTime         # Registration timestamp
-
-# Game state with progression
-class GameState(Base):
-    user_id: Integer            # Foreign key to User
-    level: Integer              # Current player level
-    energy: Integer             # Current energy points
-    balance: BigInteger         # In-game currency balance
-    total_earned: BigInteger    # Lifetime earnings
-    last_passive_collect: DateTime  # Last passive income collection
-
-# NFT ownership tracking
-class UserNFT(Base):
-    user_id: Integer            # Owner reference
-    token_id: String           # Unique NFT identifier
-    collection_address: String  # Smart contract address
-    metadata_uri: String       # NFT metadata location
-```
-
-## 🔧 Установка и настройка
-
-### Предварительные требования
-- **Node.js** (v18+)
-- **Python** (3.10+)
-- **Docker & Docker Compose**
-- **PostgreSQL** (при запуске без Docker)
-
-### Быстрый старт с Docker (рекомендуется)
-
-1. **Клонирование репозитория**
 ```bash
-git clone https://github.com/DedovInside/SpaceHunter
-cd SpaceHunter
+git clone <repo-url> ~/workspace/spacehunter-demo
+cd ~/workspace/spacehunter-demo
+
+python3 -m venv venv
+./venv/bin/pip install -r backend/requirements.txt
+
+cd frontend && npm install && cd ..
 ```
 
-2. **Настройка окружения**
+Create `backend/.env` and populate the keys listed under [Configuration](#configuration). Do not commit it.
+
+## Configuration
+
+All keys live in `backend/.env` unless noted. Names only — supply your own values.
+
+| Name | Location | Purpose |
+|---|---|---|
+| `DATABASE_URL` | `backend/.env` | SQLite connection string for `demo.db` |
+| `SECRET_KEY` | `backend/.env` | Application signing secret |
+| `SPACEHUNTER_ADMIN_IDS` | `backend/.env` | Telegram IDs granted admin access |
+| `SPACEHUNTER_AUTH` | `backend/.env` | Toggles the authentication layer |
+| `TELEGRAM_BOT_TOKEN` | `backend/.env` | Bot credentials used by the backend |
+| `TON_API_ENDPOINT` | `backend/.env` | TON API base endpoint |
+| `.bot-token` | repo root | Token file for `@FARMGradientbot` |
+| `.game-url` | repo root | Current public tunnel URL, read and pushed to the bot menu button |
+
+Frontend build-time configuration is passed on the command line rather than a file — see [How to run](#how-to-run). The mock Telegram environment used for the browser demo path is DEV-gated and is not active in a production build.
+
+## Database migrations
+
+Apply in this order. `game-runners/restart-all.sh` runs the whole sequence as part of rebuilding the stack, so a stack restart is normally all you need.
+
+1. **Alembic versions** — `backend/alembic/`, brought up to date with Alembic's upgrade command.
+2. **`backend/migrate_security_fixes.py`** — security hardening.
+3. **`backend/migrate_boost_unique.py`** — boost uniqueness constraints.
+4. **`backend/migrate_admin_panel.py`** — admin panel schema.
+
+The three scripts are one-off and idempotent-safe to re-run via the restart script; do not reorder them, as later steps assume the schema left by earlier ones.
+
+## How to run
+
+**Backend + frontend (single origin)**
+
 ```bash
-# Окружение бэкенда
-cp backend/.env.example backend/.env
-# Отредактируйте backend/.env с вашей конфигурацией
+cd ~/workspace/spacehunter-demo
+./venv/bin/uvicorn demo_serve:app --host 127.0.0.1 --port 8000
 ```
 
-3. **Запуск с Docker Compose**
-```bash
-docker-compose up -d
-```
+`demo_serve.py` serves the API and mounts `frontend/dist` at `/SpaceHunter`, with SPA fallback so deep links resolve. One process, one port, no CORS.
 
-4. **Доступ к приложению**
-- Backend API: http://localhost:8000
-- Документация API: http://localhost:8000/docs
-- База данных: localhost:5432
+**Frontend build**
 
-### Настройка для разработки
-
-#### Настройка бэкенда
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Миграции базы данных
-alembic upgrade head
-
-# Запуск сервера разработки
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-#### Настройка фронтенда
 ```bash
 cd frontend
-npm install
-npm run dev  # Сервер разработки
-npm run build  # Продакшн сборка
+NODE_ENV=development VITE_API_URL= npx vite build
 ```
 
-## 🌐 Развертывание
+Rebuild and restart the backend whenever frontend sources change, since `dist` is served statically.
 
-### Продакшн развертывание
-Приложение настроено для продакшн развертывания с:
+**Telegram bot**
 
-- **Docker контейнеризацией** для консистентных окружений
-- **PostgreSQL персистентностью** с томами данных
-- **CORS конфигурацией** для межсайтовых запросов
-- **Конфигурацией на основе окружения** для безопасности
-- **Обработкой фоновых задач** для игровых механик
-
-### Переменные окружения
 ```bash
-# Backend (.env)
-DATABASE_URL=postgresql+asyncpg://user:pass@host:port/db
-SECRET_KEY=your-secret-key
-TELEGRAM_BOT_TOKEN=your-bot-token
-TON_API_ENDPOINT=https://toncenter.com/api/v2/
-
-# Frontend
-VITE_API_BASE_URL=https://your-api-domain.com
-VITE_TON_MANIFEST_URL=https://your-domain.com/tonconnect-manifest.json
+python bot_runner.py
 ```
 
-## 🏆 Технические достижения
+The bot answers `/start` with the **Play** `web_app` button, exposes **Play** as the chat menu button, and registers referral payloads server-side.
 
-### Full-Stack экспертиза
-- **Микросервисная архитектура**: Модульный дизайн бэкенда с разделением ответственности
-- **Типобезопасность**: Сквозная реализация TypeScript со строгой типизацией
-- **Асинхронное программирование**: Продвинутые паттерны async/await для оптимальной производительности
-- **Проектирование БД**: Нормализованная схема с эффективным управлением связями
-- **Проектирование API**: RESTful архитектура по стандартам OpenAPI
+**Optional: public tunnel**
 
-### Интеграция блокчейна
-- **Разработка смарт-контрактов**: Кастомные FunC контракты для блокчейна TON
-- **Подключение кошельков**: Бесшовная интеграция TON Connect
-- **Обработка транзакций**: Безопасная обработка блокчейн транзакций
-- **NFT механики**: Полная NFT экосистема с минтингом и торговлей
+Expose `:8000` through a free pinggy tunnel, then write the resulting URL to `.game-url` and refresh the bot menu button:
 
-### Оптимизация производительности
-- **Индексирование БД**: Оптимизированные запросы со стратегическим индексированием
-- **Фоновая обработка**: Неблокирующее выполнение фоновых задач
-- **Управление ресурсами**: Эффективная по памяти обработка данных
+```bash
+# start the tunnel, capture its public URL, then:
+echo "<public-url>" > .game-url
+```
 
-### DevOps и инфраструктура
-- **Контейнеризация**: Docker-развертывание с многоэтапными сборками
-- **Миграции БД**: Автоматизированное версионирование схемы с Alembic
-- **Управление окружением**: Безопасная обработка конфигурации в разных окружениях
-- **Документация API**: Автогенерируемая OpenAPI документация
+**Full stack rebuild**
 
-## 🎯 Демонстрация ключевых функций
+```bash
+game-runners/restart-all.sh
+```
 
-### 1. Продвинутая аутентификация пользователей
-- Интеграция Telegram Mini App SDK
-- Безопасное управление пользовательскими сессиями
-- Автоматическая регистрация пользователей с отслеживанием рефералов
+## Testing and verification
 
-### 2. Управление состоянием игры в реальном времени
-- Живая синхронизация между клиентом и сервером
-- Оптимистичные обновления для плавного пользовательского опыта
-- Фоновая обработка для генерации пассивного дохода
+- Backend test battery: green.
+- Browser QA: 7/7 pass.
+- Auth tests: 14/14.
+- Live race and double-pay exploit probes: re-verified exact-once payouts.
+- Golden-battery numbers hold exactly — combo 850, golden battery +800 / +1036. Any deviation indicates a regression in payout logic.
 
-### 3. Комплексная реферальная система
-- Многоуровневое отслеживание рефералов
-- Автоматизированные расчеты комиссий
-- Статистика рефералов и заработок в реальном времени
+## Project structure
 
-### 4. Управление блокчейн активами
-- Интеграция TON кошелька с проверкой баланса
-- Минтинг NFT и отслеживание владения
-- Взаимодействие со смарт-контрактами для переводов активов
+```
+spacehunter-demo/
+├── backend/
+│   ├── app/                     FastAPI application
+│   ├── alembic/                 schema migrations (versions/)
+│   ├── migrate_security_fixes.py
+│   ├── migrate_boost_unique.py
+│   ├── migrate_admin_panel.py
+│   └── .env                     local config, not committed
+├── frontend/
+│   ├── src/                     React + TypeScript Mini App
+│   └── dist/                    build output, served as StaticFiles
+├── SmartContracts/              FunC jetton + NFT contracts
+├── game-runners/
+│   └── restart-all.sh           rebuilds the stack, runs migrations
+├── demo_serve.py                uvicorn entrypoint (API + static frontend)
+├── bot_runner.py                Telegram bot
+├── demo.db                      SQLite database (WAL)
+├── .bot-token
+└── .game-url
+```
 
-### 5. Геймификационные механики
-- Прогрессивная система уровней с наградами за разблокировку
-- Система ежедневных заданий с отслеживанием выполнения
-- Игровой процесс на основе энергии с автоматическим восстановлением
-- Система усилений для улучшения геймплея
+## Operational notes
 
-## 🔮 Будущие улучшения
+**Free-tunnel expiry.** The pinggy tunnel used for public access expires after roughly 60 minutes. When it does, the URL changes, so the bot menu button and `.game-url` go stale and the Mini App stops opening. Restart the tunnel, write the new URL to `.game-url`, and re-push it to the bot's menu button. Long-term the correct fix is stable hosting behind a domain rather than a rotating tunnel.
 
-### Запланированные функции
-- **Маркетплейс**: P2P платформа торговли NFT
-- **Система гильдий**: Командный геймплей и соревнования
-- **Мобильное приложение**: Нативные iOS/Android приложения
-- **Продвинутая аналитика**: Отслеживание поведения игроков и инсайты
-- **Многоязычная поддержка**: Интернационализация для глобального охвата
-
-### Техническая дорожная карта
-- **Микросервисная архитектура**: Дальнейшая декомпозиция сервисов
-- **GraphQL API**: Улучшенная гибкость запросов
-- **Функции реального времени**: WebSocket интеграция для живых обновлений
-- **Продвинутое кэширование**: Реализация Redis для улучшенной производительности
-- **Балансировка нагрузки**: Возможности горизонтального масштабирования
-- **Кэширование запросов**: Улучшение производительности на большом количестве пользователей
-
-## 📈 Статистика проекта
-
-- **Строк кода**: 15,000+ (TypeScript, Python, FunC)
-- **API эндпоинты**: 25+ RESTful эндпоинтов
-- **Таблицы БД**: 12+ нормализованных таблиц
-- **Смарт-контракты**: 4 кастомных TON контракта
-- **Компоненты**: 50+ переиспользуемых React компонентов
-
-## 🤝 Вклад в разработку
-
-Этот проект демонстрирует готовое к продакшну качество кода и следует лучшим практикам индустрии:
-
-1. **Стандарты кода**: ESLint/Prettier для консистентного форматирования
-2. **Типобезопасность**: Строгая конфигурация TypeScript
-3. **Документация**: Comprehensive встроенная и API документация
-4. **Контроль версий**: командная работа с Git
-5. **Успешная демонстрация**: защита на комиссии в НИУ ВШЭ
-
-
-## Примечание
-
-Проект был выложен на арендованный сервер на месяц в период защит, но на данный момент зайти и поиграть пока нельзя.
-
-**Ссылка на защиту**: https://cs.hse.ru/cppr/best_projects/space_hunter
-
-
----
-
-<div align="center">
-
-**🚀 Создано с страстью к инновационным Web3 игровым решениям 🚀**
-
-*Этот проект демонстрирует продвинутые возможности full-stack разработки, включая современные веб-технологии, интеграцию блокчейна и готовые к продакшну практики развертывания.*
-
-</div>
+**Auth ON consequence.** With authentication enabled, the plain website link serves the application shell only — it renders but cannot play. All play and all admin activity happen inside Telegram, where the Mini App carries a verified identity. Testers hitting the bare URL and seeing an inert shell are seeing expected behaviour, not a bug.
