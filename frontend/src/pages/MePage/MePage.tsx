@@ -254,10 +254,10 @@ export const MePage: FC = () => {
 
         {/* Referral */}
         <div className="p2e-card">
-          <div className="sh-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="sh-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Users size={14} strokeWidth={1.8} /> Your invite link
           </div>
-          <div style={{ fontSize: 13, opacity: 0.78, margin: '6px 0 10px', lineHeight: 1.45 }}>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.62)', margin: '8px 0 14px', lineHeight: 1.5 }}>
             +1,000 CSM when a friend starts mining, plus a share of everything
             your crew mines — up to 12% from direct friends.
           </div>
@@ -279,8 +279,8 @@ export const MePage: FC = () => {
               onFocus={(e) => e.currentTarget.select()}
               aria-label="Invite link"
               style={{
-                width: '100%', marginTop: 10, padding: '11px 12px', borderRadius: 12,
-                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(245,197,24,0.25)',
+                width: '100%', marginTop: 12, padding: '12px 14px', borderRadius: 12,
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
                 color: 'inherit', fontSize: 13, fontFamily: 'inherit',
               }}
             />
@@ -309,7 +309,7 @@ export const MePage: FC = () => {
           ) : loadError ? (
             <div className="no-friends">
               <p>Couldn’t load your crew. Check your connection and try again.</p>
-              <button className="invite-button" onClick={load} style={{ marginTop: 10 }}>Retry</button>
+              <button className="invite-button" onClick={load} style={{ marginTop: 12 }}>Retry</button>
             </div>
           ) : (
             <div className="friends-list-container">
@@ -352,7 +352,7 @@ export const MePage: FC = () => {
           )}
         </div>
         )}
-        <div style={{ height: 14 }} />
+        <div style={{ height: 16 }} />
         <ReferralPanel telegramId={userId} stats={stats} />
 
         {/* Withdraw */}
