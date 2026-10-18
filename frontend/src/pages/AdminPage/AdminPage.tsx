@@ -311,7 +311,8 @@ export const AdminPage: FC = () => {
     return (
         <Page back={true}>
             <div style={{ padding: '16px 16px 110px', maxWidth: 430, margin: '0 auto' }}>
-                <h1 style={{ fontSize: 2
+                <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 2px' }}>Admin Panel</h1>
+                <p style={{ opacity: 0.65, fontSize: 13, margin: '0 0 14px' }}>
                     Every action is signature-verified against the admin allowlist and written to the audit log.
                 </p>
 
