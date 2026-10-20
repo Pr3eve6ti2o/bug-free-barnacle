@@ -171,3 +171,17 @@
 .task-sub { font-size: 12.5px; opacity: 0.72; margin: 2px 0 8px; line-height: 1.4; }
 .task-reward-boost { color: #7ee2a8; }
 .task-done { opacity: 0.55; }
+
+.tasks-history {
+  margin-top: 10px;
+}
+
+.history-badge {
+  background: rgba(245, 197, 24, 0.14);
+  color: #f5c518;
+  border: 1px solid rgba(245, 197, 24, 0.4);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}

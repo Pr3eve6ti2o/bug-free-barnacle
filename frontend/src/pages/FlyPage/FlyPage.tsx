@@ -4,6 +4,7 @@ import { useTelegramUserId } from '@/hooks/useTelegramUser';
 import { MiningCard } from '@/components/MiningCard/MiningCard';
 import { WelcomeBonus } from '@/components/WelcomeBonus/WelcomeBonus';
 import { TermsGate } from '@/components/TermsConsent/TermsConsent';
+import { Skeleton } from '@/components/Skeleton/Skeleton.tsx';
 import { Page } from '@/components/Page.tsx';
 
 // Ships by level
@@ -117,13 +118,15 @@ export const FlyPage: FC = () => {
 
                 <div className="fly-balance-hero">
                     <div className="fly-balance-value tnum">
-                        {balance === null ? '—' : Number(balance.toFixed(0)).toLocaleString('en-GB')}
+                        {balance === null
+                            ? <Skeleton width={56} height={18} />
+                            : Number(balance.toFixed(0)).toLocaleString('en-GB')}
                     </div>
                     <div className="fly-balance-unit">CSM</div>
                 </div>
 
                 <div className="stat-chips" style={{ justifyContent: 'center' }}>
-                    <div className="stat-chip stat-chip-purple">
+                    <div className="stat-chip stat-chip-silver">
                         <span className="stat-chip-label">Level</span>
                         <span className="stat-chip-value tnum">{level}</span>
                     </div>

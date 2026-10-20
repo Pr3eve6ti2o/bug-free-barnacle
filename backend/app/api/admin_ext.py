@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.admin import _log, require_admin
+from app.models.features import AdminAction
 from app.database import get_db
 from app.models.game_state import GameState
 from app.models.p2e import BotStart, ReferralEarning, WithdrawalRequest
@@ -480,13 +481,66 @@ async def set_economy(req: EconomyRequest, db: AsyncSession = Depends(get_db)):
               "og_cost": (100, 1_000_000), "welcome_reward": (0, 10_000)}
     keys = {"base_rate": "econ_base_rate", "session_hours": "econ_session_hours",
             "og_cost": "econ_og_cost", "welcome_reward": "econ_welcome_reward"}
+    defaults = {"base_rate": MINING_BASE_RATE,
+                "session_hours": MINING_SESSION_SECONDS // 3600,
+                "og_cost": OG_PASS_COST,
+                "welcome_reward": WELCOME_REWARD}
     for field, (lo, hi) in bounds.items():
         val = getattr(req, field)
         if val is not None:
             if not (lo <= val <= hi):
                 raise HTTPException(status_code=400, detail=f"{field} must be {lo}..{hi}")
+            old = await econ_int(db, keys[field], defaults[field])
             await admin_state.set_setting(db, keys[field], str(val))
-            await _log(db, req.admin_id, "economy_set", field, str(val))
+            await _log(db, req.admin_id, "economy_set", field, f"{old} -> {val}")
+    await db.commit()
+    return await get_economy(req.admin_id, db)
+
+
+class EconomyRollbackRequest(BaseModel):
+    admin_id: int
+    action_id: int
+
+
+@router.post("/economy/rollback")
+async def rollback_economy(req: EconomyRollbackRequest, db: AsyncSession = Depends(get_db)):
+    """Revert ONE past economy change, identified by its audit-log entry.
+
+    economy_set entries store detail as "old -> new" with target = field, so
+    the pre-change value is recoverable from the log itself. The rollback is
+    bounds-checked and written to the audit log as its own entry, so the
+    history stays append-only and honest.
+    """
+    require_admin(req.admin_id)
+    entry = (await db.execute(
+        select(AdminAction).where(AdminAction.id == req.action_id))).scalar_one_or_none()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Audit entry not found")
+    if entry.action != "economy_set":
+        raise HTTPException(status_code=400, detail="Only economy_set entries can be rolled back")
+    bounds = {"base_rate": (1, 10_000), "session_hours": (1, 72),
+              "og_cost": (100, 1_000_000), "welcome_reward": (0, 10_000)}
+    keys = {"base_rate": "econ_base_rate", "session_hours": "econ_session_hours",
+            "og_cost": "econ_og_cost", "welcome_reward": "econ_welcome_reward"}
+    defaults = {"base_rate": MINING_BASE_RATE,
+                "session_hours": MINING_SESSION_SECONDS // 3600,
+                "og_cost": OG_PASS_COST,
+                "welcome_reward": WELCOME_REWARD}
+    field = entry.target
+    if field not in bounds:
+        raise HTTPException(status_code=400, detail=f"Unknown economy field {field!r}")
+    try:
+        old_val = int(str(entry.detail).split(" -> ")[0].strip())
+    except (ValueError, IndexError):
+        raise HTTPException(status_code=400, detail="Audit entry has no recoverable previous value")
+    lo, hi = bounds[field]
+    if not (lo <= old_val <= hi):
+        raise HTTPException(status_code=400, detail=f"Recorded previous value {old_val} is out of bounds")
+    current = await econ_int(db, keys[field], defaults[field])
+    if current == old_val:
+        raise HTTPException(status_code=400, detail=f"{field} is already {old_val} — nothing to roll back")
+    await admin_state.set_setting(db, keys[field], str(old_val))
+    await _log(db, req.admin_id, "economy_rollback", field, f"{current} -> {old_val} (reverts #{entry.id})")
     await db.commit()
     return await get_economy(req.admin_id, db)
 

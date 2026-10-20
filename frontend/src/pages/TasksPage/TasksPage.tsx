@@ -5,6 +5,8 @@ import "./TasksPage.css";
 import "@/components/p2e.css";
 import { taskApi } from "@/services/api";
 import { useTelegramUserId } from "@/hooks/useTelegramUser";
+import Skeleton from "@/components/Skeleton/Skeleton.tsx";
+import { ClipboardList } from "lucide-react";
 
 interface Task {
   id: number;
@@ -33,6 +35,7 @@ export const TasksPage: FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [claimingTask, setClaimingTask] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"permanent" | "daily" | "global">("permanent");
   const currentDateRef = useRef<number>(new Date().getDate());
   const navigate = useNavigate();
 
@@ -135,21 +138,62 @@ export const TasksPage: FC = () => {
     }
   };
 
-  // Claimable first, then in progress, then claimed
-  const filteredTasks = [...tasks].sort((a, b) => {
-    const rank = (t: UserTask) => (t.is_claimed ? 2 : t.is_completed ? 0 : 1);
-    return rank(a) - rank(b);
-  });
+  // Only the active tab (Global shows everything), then: claimable first,
+  // then in progress, then claimed
+  const filteredTasks = [...tasks]
+    .filter((t) => activeTab === "global" || t.task.type === activeTab)
+    .sort((a, b) => {
+      const rank = (t: UserTask) => (t.is_claimed ? 2 : t.is_completed ? 0 : 1);
+      return rank(a) - rank(b);
+    });
 
   return (
     <Page back={false}>
       <div className="tasks-page-container">
         <div className="tasks-head">
-          <div style={{ fontWeight: 600, fontSize: 22, letterSpacing: "-0.01em" }}>Starter tasks</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,.62)", marginTop: 4, lineHeight: 1.45 }}>
-            Earn CSM tokens or permanent mining-power boosts. Progress is
-            checked automatically — rewards unlock as soon as a task is done.
+          <div style={{ fontWeight: 600, fontSize: 22, letterSpacing: "-0.01em" }}>
+            {activeTab === "permanent" ? "Starter tasks" : activeTab === "daily" ? "Daily tasks" : "Global tasks"}
           </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.62)", marginTop: 4, lineHeight: 1.45 }}>
+            {activeTab === "permanent"
+              ? "Earn CSM tokens or permanent mining-power boosts. Progress is checked automatically — rewards unlock as soon as a task is done."
+              : activeTab === "daily"
+                ? "Fresh targets every day for extra CSM tokens. Progress is checked automatically — rewards unlock as soon as a task is done, and reset when a new day begins."
+                : "Every task in the game, in one place — starter and daily together. Progress is checked automatically, and rewards unlock as soon as a task is done."}
+          </div>
+        </div>
+
+        <div
+          role="tablist"
+          aria-label="Task categories"
+          style={{ display: "flex", gap: 8, margin: "14px 0 16px" }}
+        >
+          {(["permanent", "daily", "global"] as const).map((tabKey) => {
+            const isActive = activeTab === tabKey;
+            const count = tabKey === "global" ? tasks.length : tasks.filter((t) => t.task.type === tabKey).length;
+            return (
+              <button
+                key={tabKey}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveTab(tabKey)}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 999,
+                  border: isActive ? "1px solid #f5c518" : "1px solid rgba(255,255,255,.12)",
+                  background: isActive ? "#f5c518" : "#10121c",
+                  color: isActive ? "#06070c" : "rgba(255,255,255,.78)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background .15s ease, color .15s ease",
+                }}
+              >
+                {tabKey === "permanent" ? "Starter" : tabKey === "daily" ? "Daily" : "Global"} ({count})
+              </button>
+            );
+          })}
         </div>
 
         {actionError && (
@@ -170,7 +214,11 @@ export const TasksPage: FC = () => {
         )}
 
         {isLoading ? (
-          <div className="loading">Loading tasks...</div>
+          <div className="tasks-list">
+            {[0, 1, 2].map((row) => (
+              <Skeleton key={row} height={64} radius={16} width="100%" />
+            ))}
+          </div>
         ) : error ? (
           <div
             role="alert"
@@ -188,8 +236,27 @@ export const TasksPage: FC = () => {
             </button>
           </div>
         ) : filteredTasks.length === 0 ? (
-          <div className="no-tasks">
-            All starter tasks completed — nice work, pilot!
+          <div
+            className="no-tasks"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 8,
+              textAlign: "center",
+            }}
+          >
+            <ClipboardList size={28} color="#f5c518" />
+            <p>
+              {activeTab === "permanent"
+                ? "All starter tasks completed — nice work, pilot!"
+                : activeTab === "daily"
+                  ? "All daily tasks completed — come back tomorrow, pilot!"
+                  : "No tasks here yet — new tasks are added regularly, pilot!"}
+            </p>
+            <p className="no-tasks-sub" style={{ opacity: 0.6, fontSize: "0.875rem" }}>
+              New tasks are added regularly — check back soon, or keep mining in the meantime.
+            </p>
           </div>
         ) : (
           <div className="tasks-list-container">
@@ -240,6 +307,20 @@ export const TasksPage: FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+        {tasks.some(t => t.is_claimed) && (
+          <div className="tasks-history">
+            <div className="sh-label" style={{ margin: '18px 0 8px' }}>History</div>
+            {tasks.filter(t => t.is_claimed).map(t => (
+              <div key={t.id} className="task-item task-done">
+                <div className="task-info">
+                  <span className="task-description">{t.task.title}</span>
+                </div>
+                <span className="task-reward tnum">{t.task.reward_type === 'multiplier' ? `+${t.task.multiplier_pct}% mining power` : `+${t.task.reward} CSM`}</span>
+                <span className="history-badge">Claimed</span>
+              </div>
+            ))}
           </div>
         )}
       </div>

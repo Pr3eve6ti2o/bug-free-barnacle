@@ -121,8 +121,8 @@
 .stat-chip-gold .stat-chip-value { color: var(--sh-accent-text); }
 .stat-chip-green { border-top-color: rgba(61, 220, 151, 0.6); }
 .stat-chip-green .stat-chip-value { color: #3ddc97; }
-.stat-chip-purple { border-top-color: rgba(168, 85, 247, 0.6); }
-.stat-chip-purple .stat-chip-value { color: #c4a5fd; }
+.stat-chip-silver { border-top-color: rgba(226, 232, 240, 0.45); }
+.stat-chip-silver .stat-chip-value { color: #e2e8f0; }
 
 /* — Tap zone: the hero. Enormous, solitary, glowing (Notcoin/Hamster pattern) — */
 .ship-button {

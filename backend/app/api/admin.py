@@ -6,7 +6,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import String, cast, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -33,6 +33,7 @@ async def _log(db: AsyncSession, admin_id: int, action: str, target: str = "", d
 class AdjustRequest(BaseModel):
     admin_id: int
     amount: int
+    reason: str = Field(min_length=3, max_length=200)
 
 
 class PromoCreateRequest(BaseModel):
@@ -100,6 +101,7 @@ async def stats(admin_id: int, db: AsyncSession = Depends(get_db)):
         "pending_withdrawals": pending_w,
         "paid_out_total": paid_total,
         "banned_users": banned_count,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -194,7 +196,7 @@ async def adjust_balance(tid: int, req: AdjustRequest, db: AsyncSession = Depend
     )
     await db.refresh(u.game_state)
     await _log(db, req.admin_id, "adjust_balance", str(tid),
-               f"{req.amount:+d} CSM → balance {int(u.game_state.balance)}")
+               f"{req.amount:+d} CSM → balance {int(u.game_state.balance)} — {req.reason}")
     await db.commit()
     await db.refresh(u.game_state)
     return {"telegram_id": tid, "balance": int(u.game_state.balance)}
@@ -242,10 +244,20 @@ async def force_start_drop(req: AdminOnly, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/actions")
-async def list_actions(admin_id: int, db: AsyncSession = Depends(get_db)):
+async def list_actions(admin_id: int, q: str = "", limit: int = 50, db: AsyncSession = Depends(get_db)):
     require_admin(admin_id)
-    rows = (await db.execute(select(AdminAction).order_by(AdminAction.id.desc()).limit(25))).scalars().all()
+    limit = min(max(int(limit), 1), 200)
+    stmt = select(AdminAction).order_by(AdminAction.id.desc())
+    if q:
+        like = f"%{q}%"
+        stmt = stmt.where(or_(
+            AdminAction.action.ilike(like),
+            AdminAction.target.ilike(like),
+            AdminAction.detail.ilike(like),
+        ))
+    rows = (await db.execute(stmt.limit(limit))).scalars().all()
     return {"actions": [{
+        "id": a.id,
         "action": a.action, "target": a.target, "detail": a.detail,
         "at": a.created_at.isoformat() if a.created_at else None,
     } for a in rows]}

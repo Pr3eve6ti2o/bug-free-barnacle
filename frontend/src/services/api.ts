@@ -3,6 +3,9 @@ import axios, { AxiosResponse } from 'axios';
 // Создаем инстанс axios с базовыми настройками
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api`, // Динамический базовый URL
+  // Fail fast into the pages' error/retry states instead of hanging on a
+  // spinner when the connection is slow (Astra finding: timeout/retry states).
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,9 +16,28 @@ const api = axios.create({
 // our own API (relative URLs): initData is a replayable session credential
 // and must never leak to a third-party origin via an absolute URL.
 api.interceptors.request.use((config) => {
-  const initData = window.Telegram?.WebApp?.initData;
+  let initData = window.Telegram?.WebApp?.initData;
   const url = config.url ?? '';
   const isOwnApi = !/^https?:\/\//i.test(url);
+  // The Telegram launch fragment can be lost on reload, leaving initData empty
+  // and every API call unauthenticated. Cache the signed payload for this tab
+  // and fall back to it when the WebApp bridge gives us nothing.
+  if (typeof initData === 'string' && initData.length > 0) {
+    try {
+      sessionStorage.setItem('sh_init_data', initData);
+    } catch {
+      // storage unavailable (private mode / disabled) — ignore
+    }
+  } else {
+    try {
+      const cachedInitData = sessionStorage.getItem('sh_init_data');
+      if (cachedInitData) {
+        initData = cachedInitData;
+      }
+    } catch {
+      // storage unavailable (private mode / disabled) — ignore
+    }
+  }
   if (initData && isOwnApi) {
     config.headers['X-Telegram-Init-Data'] = initData;
   }
@@ -550,7 +572,7 @@ export interface AdminUser {
 }
 
 export interface AdminSettings { referrals_enabled: boolean; arcade_enabled: boolean; announcement: string }
-export interface AdminAction { action: string; target: string; detail: string; at: string | null }
+export interface AdminAction { id: number; action: string; target: string; detail: string; at: string | null }
 
 export interface AdminWithdrawal {
   id: number; telegram_id: number | null; username: string | null; amount: number;
@@ -575,12 +597,12 @@ export const adminApi = {
     api.get<any, { text: string }>('/admin/announcement'),
   getStats: (adminId: number | string) =>
     api.get<any, AdminStats>(`/admin/stats?admin_id=${adminId}`),
-  listUsers: (adminId: number | string, q = '') =>
-    api.get<any, { users: AdminUser[] }>(`/admin/users?admin_id=${adminId}&q=${encodeURIComponent(q)}`),
+  listUsers: (adminId: number | string, q = '', limit = 50) =>
+    api.get<any, { users: AdminUser[] }>(`/admin/users?admin_id=${adminId}&q=${encodeURIComponent(q)}&limit=${limit}`),
   getUser: (adminId: number | string, tid: number) =>
     api.get<any, AdminUser>(`/admin/users/${tid}?admin_id=${adminId}`),
-  adjust: (adminId: number | string, tid: number, amount: number) =>
-    api.post<any, { telegram_id: number; balance: number }>(`/admin/users/${tid}/adjust`, { admin_id: Number(adminId), amount }),
+  adjust: (adminId: number | string, tid: number, amount: number, reason: string) =>
+    api.post<any, { telegram_id: number; balance: number }>(`/admin/users/${tid}/adjust`, { admin_id: Number(adminId), amount, reason }),
   setLevel: (adminId: number | string, tid: number, level: number) =>
     api.post<any, { telegram_id: number; level: number }>(`/admin/users/${tid}/set-level`, { admin_id: Number(adminId), level }),
   grantBoost: (adminId: number | string, tid: number, pct: number) =>
@@ -599,10 +621,12 @@ export const adminApi = {
     api.post<any, AdminSettings>('/admin/settings', { admin_id: Number(adminId), ...body }),
   forceStartDrop: (adminId: number | string) =>
     api.post<any, { drop_key: string; ends_at: string }>('/admin/drops/force-start', { admin_id: Number(adminId) }),
-  getActions: (adminId: number | string) =>
-    api.get<any, { actions: AdminAction[] }>(`/admin/actions?admin_id=${adminId}`),
+  getActions: (adminId: number | string, q = '', limit = 50) =>
+    api.get<any, { actions: AdminAction[] }>(`/admin/actions?admin_id=${adminId}&q=${encodeURIComponent(q)}&limit=${limit}`),
   exportActions: (adminId: number | string) =>
-    api.get<any, Blob>(`/admin/export.xlsx?admin_id=${adminId}`, { responseType: 'blob' }),
+    api.get<any, Blob>(`/admin/export.xlsx?admin_id=${adminId}`, { responseType: 'blob', timeout: 60000 }),
+  rollbackEconomy: (adminId: number | string, actionId: number) =>
+    api.post<any, AdminEconomy>('/admin/economy/rollback', { admin_id: Number(adminId), action_id: actionId }),
   listWithdrawals: (adminId: number | string, status = '') =>
     api.get<any, { withdrawals: AdminWithdrawal[]; counts: Record<string, number>; paid_total: number }>(
       `/admin/withdrawals?admin_id=${adminId}${status ? `&status=${status}` : ''}`),

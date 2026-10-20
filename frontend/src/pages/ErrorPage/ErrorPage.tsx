@@ -1,7 +1,10 @@
 import { FC } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Page } from '@/components/Page.tsx';
 
 export const ErrorPage: FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Page back={false}>
       <div className="fly-page-container">
@@ -12,17 +15,17 @@ export const ErrorPage: FC = () => {
             Please check your connection and try again.
           </p>
           <button
-            className="bg-purple-700 hover:bg-purple-800 text-white px-8 py-3 rounded-lg text-lg font-medium"
+            className="bg-[#f5c518] hover:bg-[#ffd83d] text-[#06070c] px-8 py-3 rounded-full text-lg font-semibold"
             onClick={() => window.location.reload()}
           >
             Reload page
           </button>
-          <a
-            className="text-white/70 underline mt-4"
-            href="/SpaceHunter/fly"
+          <button
+            className="text-[#f5c518] underline underline-offset-4 mt-4 hover:text-[#ffd83d]"
+            onClick={() => navigate('/SpaceHunter/fly')}
           >
             Back to the game
-          </a>
+          </button>
         </div>
       </div>
     </Page>

@@ -26,8 +26,21 @@ function getWebApp(): TelegramWebApp | undefined {
 
 function readUser(): TelegramUser | null {
   const user = getWebApp()?.initDataUnsafe?.user;
-  if (!user || typeof user.id !== 'number') return null;
-  return { id: user.id, username: user.username ?? null };
+  if (user && typeof user.id === 'number') {
+    return { id: user.id, username: user.username ?? null };
+  }
+  try {
+    if (typeof window === 'undefined') return null;
+    const initData = window.sessionStorage.getItem('sh_init_data');
+    if (!initData) return null;
+    const rawUser = new URLSearchParams(initData).get('user');
+    if (!rawUser) return null;
+    const parsed = JSON.parse(rawUser) as TelegramWebAppUser | null;
+    if (!parsed || typeof parsed.id !== 'number') return null;
+    return { id: parsed.id, username: parsed.username ?? null };
+  } catch {
+    return null;
+  }
 }
 
 export function useTelegramUserId(): number | null {

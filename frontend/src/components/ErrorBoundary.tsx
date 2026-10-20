@@ -128,6 +128,8 @@ const primaryButtonStyle: CSSProperties = {
   border: 'none',
   background: '#f5c518',
   color: '#06070c',
+  borderRadius: '999px',
+  fontWeight: 600,
 };
 
 const secondaryButtonStyle: CSSProperties = {

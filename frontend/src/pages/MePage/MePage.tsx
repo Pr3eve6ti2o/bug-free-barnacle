@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from "react";
-import { Check, Copy, Send, ShieldCheck, Users, Wallet, ArrowDownToLine, Pickaxe } from "lucide-react";
+import { Check, Copy, Send, ShieldCheck, Users, Wallet, ArrowDownToLine, Pickaxe, Coins } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Page } from "@/components/Page.tsx";
 import {
@@ -7,6 +7,7 @@ import {
   walletApi, withdrawApi, PayoutEvent, WithdrawalRecord,
 } from '@/services/api';
 import { Spinner } from '@/components/Spinner/Spinner.tsx';
+import Skeleton from '@/components/Skeleton/Skeleton.tsx';
 import { ReferralPanel } from "@/components/ReferralPanel/ReferralPanel";
 import { Leaderboard } from "@/components/Leaderboard/Leaderboard";
 import "./MePage.css";
@@ -222,7 +223,7 @@ export const MePage: FC = () => {
               {displayName}
             </div>
             <div style={{ fontSize: 13, opacity: 0.62 }}>
-              ID {userId} · Level {level ?? '—'}
+              ID {userId} · Level {level === null ? <Skeleton width={40} height={14} /> : level}
             </div>
           </div>
           <span className="p2e-pill p2e-pill-green">Pilot</span>
@@ -232,27 +233,25 @@ export const MePage: FC = () => {
         <div className="me-stats-grid">
           <div className="me-stat">
             <span className="me-stat-label">Balance</span>
-            <span className="me-stat-value tnum">{balance === null ? '—' : balance.toLocaleString('en-GB')}</span>
+            <span className="me-stat-value tnum">{balance === null ? <Skeleton width={56} height={18} /> : balance.toLocaleString('en-GB')}</span>
             <span className="me-stat-unit">CSM</span>
           </div>
           <div className="me-stat">
             <span className="me-stat-label"><Pickaxe size={11} /> Mining power</span>
-            <span className="me-stat-value tnum">{power === null ? '—' : power.toLocaleString('en-GB')}</span>
+            <span className="me-stat-value tnum">{power === null ? <Skeleton width={56} height={18} /> : power.toLocaleString('en-GB')}</span>
             <span className="me-stat-unit">CSM/h</span>
           </div>
           <div className="me-stat">
             <span className="me-stat-label"><Users size={11} /> Crew</span>
-            <span className="me-stat-value tnum">{stats ? stats.total_invites : '—'}</span>
+            <span className="me-stat-value tnum">{stats ? stats.total_invites : <Skeleton width={56} height={18} />}</span>
             <span className="me-stat-unit">friends</span>
           </div>
           <div className="me-stat">
             <span className="me-stat-label">Crew earned</span>
-            <span className="me-stat-value tnum">{stats ? `+${stats.earnings_total.toLocaleString('en-GB')}` : '—'}</span>
+            <span className="me-stat-value tnum">{stats ? `+${stats.earnings_total.toLocaleString('en-GB')}` : <Skeleton width={56} height={18} />}</span>
             <span className="me-stat-unit">CSM</span>
           </div>
-        </div>
-
-        {/* Referral */}
+        </div>{/* Referral */}
         <div className="p2e-card">
           <div className="sh-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Users size={14} strokeWidth={1.8} /> Your invite link
@@ -402,10 +401,22 @@ export const MePage: FC = () => {
         </div>
 
         {/* Recent payouts feed */}
-        {payouts.length > 0 && (
-          <div className="p2e-card" style={{ marginTop: 14 }}>
-            <div className="sh-label" style={{ marginBottom: 8 }}>Recent payouts</div>
-            {payouts.map((p, i) => (
+        <div className="p2e-card" style={{ marginTop: 14 }}>
+          <div className="sh-label" style={{ marginBottom: 8 }}>Recent payouts</div>
+          {payouts.length === 0 && loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px 0' }}>
+              <Spinner />
+            </div>
+          ) : payouts.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '18px 14px', gap: 4 }}>
+              <Coins size={30} strokeWidth={1.4} color="var(--sh-gold)" />
+              <div style={{ fontWeight: 600, fontSize: 14, color: 'rgba(255,255,255,.92)', marginTop: 2 }}>No payouts yet</div>
+              <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.55)', maxWidth: 250, lineHeight: 1.45 }}>
+                Crew earnings and completed withdrawals will appear here.
+              </div>
+            </div>
+          ) : (
+            payouts.map((p, i) => (
               <div key={i} className="me-feed-row">
                 <span style={{ fontWeight: 600, fontSize: 15, color: 'rgba(255,255,255,.92)' }}>{p.name}</span>
                 <span style={{ color: 'rgba(255,255,255,.62)', fontSize: 13 }}>
@@ -416,9 +427,75 @@ export const MePage: FC = () => {
                 </span>
                 <span style={{ color: 'rgba(255,255,255,.45)', fontSize: 11 }}>{timeAgo(p.created_at)}</span>
               </div>
-            ))}
+            ))
+          )}
+        </div>
+
+        {/* Explore */}
+        <div style={{ marginTop: 16 }}>
+          <div className="sh-label" style={{ marginBottom: 8 }}>Explore</div>
+          {[
+            { title: 'Boost', desc: "Upgrade your ship's mining power", path: '/SpaceHunter/boost' },
+            { title: 'Store', desc: 'OG Pass and upgrades — in the Boost hangar', path: '/SpaceHunter/boost' },
+            { title: 'Drops', desc: 'Timed CSM drops — be quick to claim', path: '/SpaceHunter/drop' },
+            { title: 'Arcade', desc: 'Fortune Wheel and Coin Flip', path: '/SpaceHunter/arcade' },
+            { title: 'NFT Collection', desc: 'Digital collectibles for miners', path: null },
+          ].map(item => (
+            item.path ? (
+            <button
+              key={item.title}
+              onClick={() => navigate(item.path!)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                marginTop: 8, padding: '13px 14px', borderRadius: 16, cursor: 'pointer',
+                background: 'rgba(245,197,24,0.07)', border: '1px solid rgba(245,197,24,0.25)',
+                color: 'inherit', textAlign: 'left',
+              }}
+            >
+              <span style={{ flex: 1 }}>
+                <span style={{ display: 'block', fontWeight: 650, fontSize: 14.5, color: 'var(--sh-gold)' }}>
+                  {item.title}
+                </span>
+                <span style={{ display: 'block', fontSize: 12.5, opacity: 0.7 }}>{item.desc}</span>
+              </span>
+              <span style={{ color: 'var(--sh-gold)', opacity: 0.7, fontSize: 18, lineHeight: 1 }}>›</span>
+            </button>
+            ) : (
+            <div
+              key={item.title}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                marginTop: 8, padding: '13px 14px', borderRadius: 16,
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)',
+                color: 'inherit', textAlign: 'left', opacity: 0.75,
+              }}
+            >
+              <span style={{ flex: 1 }}>
+                <span style={{ display: 'block', fontWeight: 650, fontSize: 14.5 }}>
+                  {item.title}
+                </span>
+                <span style={{ display: 'block', fontSize: 12.5, opacity: 0.7 }}>{item.desc}</span>
+              </span>
+              <span style={{
+                fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase',
+                color: 'var(--sh-gold)', border: '1px solid rgba(245,197,24,0.4)',
+                borderRadius: 999, padding: '3px 8px',
+              }}>Coming soon</span>
+            </div>
+            )
+          ))}
+        </div>
+
+        {/* Help & rules */}
+        <div className="p2e-card" style={{ marginTop: 14 }}>
+          <div className="sh-label" style={{ marginBottom: 8 }}>Help & rules</div>
+          <div style={{ fontSize: 13, lineHeight: 1.65, color: 'rgba(255,255,255,0.72)' }}>
+            <div>⛏️ Mining runs in 6-hour sessions — claim your CSM when a session ends, then start the next one.</div>
+            <div>🎯 Tasks check themselves automatically; claim each reward once its bar is full.</div>
+            <div>👥 Your crew earns you CSM: +1,000 when a friend starts mining, plus a share of what they mine — up to 12% from direct friends.</div>
+            <div>💸 Withdrawals start at 1,000 CSM to your connected TON wallet, and are reviewed before payout.</div>
           </div>
-        )}
+        </div>
 
         {isAdmin && (
           <button

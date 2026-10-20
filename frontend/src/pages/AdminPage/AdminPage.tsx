@@ -61,6 +61,7 @@ export const AdminPage: FC = () => {
     const [gate, setGate] = useState<'loading' | 'admin' | 'denied'>('loading');
     const [section, setSection] = useState<Section>('overview');
     const [stats, setStats] = useState<AdminStats | null>(null);
+    const [statsLoadedAt, setStatsLoadedAt] = useState<Date | null>(null);
     const [actions, setActions] = useState<AdminAction[]>([]);
     const [settings, setSettings] = useState<AdminSettings | null>(null);
     const [notice, setNotice] = useState('');
@@ -69,8 +70,10 @@ export const AdminPage: FC = () => {
     // players
     const [q, setQ] = useState('');
     const [users, setUsers] = useState<AdminUser[]>([]);
+    const [usersLimit, setUsersLimit] = useState(50);
     const [selected, setSelected] = useState<AdminUser | null>(null);
     const [adjustAmt, setAdjustAmt] = useState('100');
+    const [adjustReason, setAdjustReason] = useState('');
     const [levelVal, setLevelVal] = useState('1');
     const [boostVal, setBoostVal] = useState('0');
     const [grantVal, setGrantVal] = useState('500');
@@ -85,6 +88,7 @@ export const AdminPage: FC = () => {
 
     // tasks
     const [tasks, setTasks] = useState<AdminTaskFull[]>([]);
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [newTask, setNewTask] = useState({
         title: '', description: '', type: 'permanent', reward: 100, reward_type: 'token',
         multiplier_pct: 0, link_url: '', condition_type: 'mining_claims', condition_value: 1,
@@ -101,14 +105,21 @@ export const AdminPage: FC = () => {
 
     const loadOverview = async () => {
         const [s, a] = await Promise.all([adminApi.getStats(userId), adminApi.getActions(userId)]);
-        setStats(s); setActions(a.actions);
+        setStats(s); setActions(a.actions); setStatsLoadedAt(new Date());
+    };
+    const revertAction = async (a: AdminAction) => {
+        if (!window.confirm(`Roll back this economy change (${a.target}: ${a.detail})? The previous value is restored, and the rollback itself is written to the audit log.`)) return;
+        try {
+            await adminApi.rollbackEconomy(userId, a.id);
+            flash(`Economy ${a.target} rolled back`); loadOverview(); loadEconomy();
+        } catch (e) { fail(e); }
     };
     const loadSettings = async () => {
         const s = await adminApi.getSettings(userId);
         setSettings(s); setBannerText(s.announcement || '');
     };
-    const loadUsers = async (query = '') => {
-        const r = await adminApi.listUsers(userId, query);
+    const loadUsers = async (query = '', limit = 50) => {
+        const r = await adminApi.listUsers(userId, query, limit);
         setUsers(r.users);
     };
     const loadWithdrawals = async (status = wFilter) => {
@@ -144,8 +155,9 @@ export const AdminPage: FC = () => {
         const amt = parseInt(adjustAmt, 10);
         if (isNaN(amt) || amt === 0) return;
         try {
-            const r = await adminApi.adjust(userId, selected.telegram_id, amt);
+            const r = await adminApi.adjust(userId, selected.telegram_id, amt, adjustReason.trim());
             flash(`Balance adjusted ${amt > 0 ? '+' : ''}${amt} → ${r.balance.toLocaleString()} CSM`);
+            setAdjustReason('');
             refreshSelected(); loadOverview();
         } catch (e) { fail(e); }
     };
@@ -180,14 +192,16 @@ export const AdminPage: FC = () => {
     };
     const applyBan = async (ban: boolean) => {
         if (!selected) return;
+        if (ban && !window.confirm(`Ban player ${selected.telegram_id}? They will lose access immediately.`)) return;
         try {
             if (ban) await adminApi.banUser(userId, selected.telegram_id, banReason);
             else await adminApi.unbanUser(userId, selected.telegram_id);
-            flash(ban ? 'Player banned' : 'Player unbanned'); refreshSelected(); loadOverview(); loadUsers(q);
+            flash(ban ? 'Player banned' : 'Player unbanned'); refreshSelected(); loadOverview(); loadUsers(q, usersLimit);
         } catch (e) { fail(e); }
     };
 
     const reviewW = async (w: AdminWithdrawal, action: 'approve' | 'reject') => {
+        if (action === 'reject' && !window.confirm(`Reject withdrawal #${w.id} and refund ${w.amount.toLocaleString('en-GB')} CSM to the player?`)) return;
         try {
             await adminApi.reviewWithdrawal(userId, w.id, action);
             flash(action === 'approve' ? `Withdrawal #${w.id} approved` : `Withdrawal #${w.id} rejected — ${w.amount.toLocaleString()} CSM refunded`);
@@ -197,6 +211,7 @@ export const AdminPage: FC = () => {
     const payW = async (w: AdminWithdrawal) => {
         const tx = (txById[w.id] || '').trim();
         if (tx.length < 8) { setError('Paste the payout transaction hash or link first'); return; }
+        if (!window.confirm(`Mark withdrawal #${w.id} as PAID — ${w.amount.toLocaleString('en-GB')} CSM to ${w.username || w.telegram_id}? This cannot be undone.`)) return;
         try {
             const r = await adminApi.markPaid(userId, w.id, tx);
             flash(`Withdrawal #${w.id} marked paid${r.proof_posted ? ' — proof posted to the channel' : ''}`);
@@ -204,22 +219,39 @@ export const AdminPage: FC = () => {
         } catch (e) { fail(e); }
     };
 
-    const createTask = async () => {
+        const createTask = async () => {
         if (!newTask.title.trim()) { setError('Task needs a title'); return; }
+        const body = {
+            title: newTask.title, description: newTask.description, type: newTask.type,
+            reward: Number(newTask.reward), reward_type: newTask.reward_type,
+            multiplier_pct: Number(newTask.multiplier_pct), link_url: newTask.link_url || null,
+            condition_type: newTask.condition_type, condition_value: Number(newTask.condition_value),
+        };
         try {
-            await adminApi.createTask(userId, {
-                title: newTask.title, description: newTask.description, type: newTask.type,
-                reward: Number(newTask.reward), reward_type: newTask.reward_type,
-                multiplier_pct: Number(newTask.multiplier_pct), link_url: newTask.link_url || null,
-                condition_type: newTask.condition_type, condition_value: Number(newTask.condition_value),
-            });
-            flash('Task created'); setNewTask({ ...newTask, title: '', description: '' }); loadTasks();
+            if (editingId !== null) {
+                await adminApi.patchTask(userId, editingId, body);
+                flash('Task updated');
+                setEditingId(null);
+            } else {
+                await adminApi.createTask(userId, body);
+                flash('Task created');
+            }
+            setNewTask({ ...newTask, title: '', description: '' }); loadTasks();
         } catch (e) { fail(e); }
     };
-    const toggleTask = async (t: AdminTaskFull) => {
+
+    const startEdit = (t: AdminTaskFull) => {
+        setEditingId(t.id);
+        setNewTask({
+            title: t.title, description: t.description ?? '', type: t.type, reward: t.reward,
+            reward_type: t.reward_type, multiplier_pct: t.multiplier_pct, link_url: t.link_url ?? '',
+            condition_type: t.condition_type, condition_value: t.condition_value,
+        });
+    };const toggleTask = async (t: AdminTaskFull) => {
         try { await adminApi.patchTask(userId, t.id, { is_active: !t.is_active }); loadTasks(); } catch (e) { fail(e); }
     };
     const removeTask = async (t: AdminTaskFull) => {
+        if (!window.confirm(`Delete task "${t.title}"? Player progress on it is removed too.`)) return;
         try { await adminApi.deleteTask(userId, t.id); flash('Task deleted'); loadTasks(); } catch (e) { fail(e); }
     };
 
@@ -254,6 +286,7 @@ export const AdminPage: FC = () => {
         } catch (e) { fail(e); }
     };
     const forceDrop = async () => {
+        if (!window.confirm('Start a CSM drop for ALL players right now?')) return;
         try {
             const r = await adminApi.forceStartDrop(userId);
             flash(`Drop forced live until ${new Date(r.ends_at).toLocaleTimeString('en-GB')}`); loadOverview();
@@ -351,6 +384,11 @@ export const AdminPage: FC = () => {
 
                 {section === 'overview' && (
                     <>
+                        {statsLoadedAt && (
+                            <div style={{ fontSize: 12, opacity: 0.55, marginBottom: 8 }}>
+                                Last updated {statsLoadedAt.toLocaleTimeString('en-GB')}
+                            </div>
+                        )}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                             {tiles.map(([k, v]) => (
                                 <div key={k} className="p2e-card" style={{ padding: '14px 16px' }}>
@@ -366,9 +404,15 @@ export const AdminPage: FC = () => {
                             </div>
                             {actions.length === 0 && <div style={{ opacity: 0.6, fontSize: 13 }}>No actions yet.</div>}
                             {actions.map((a, i) => (
-                                <div key={i} style={{ display: 'flex', gap: 8, fontSize: 13, padding: '5px 0', borderTop: i ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                                <div key={a.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, padding: '5px 0', borderTop: i ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
                                     <span style={{ fontWeight: 700 }}>{a.action}</span>
                                     <span style={{ opacity: 0.7, flex: 1 }}>{a.target} {a.detail}</span>
+                                    {a.action === 'economy_set' && (
+                                        <button onClick={() => void revertAction(a)} style={{
+                                            padding: '3px 10px', borderRadius: 999, cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
+                                            color: '#f5c518', background: 'rgba(245,197,24,0.08)', border: '1px solid rgba(245,197,24,0.35)',
+                                        }}>Revert</button>
+                                    )}
                                     <span style={{ opacity: 0.45 }}>{a.at ? new Date(a.at).toLocaleTimeString('en-GB') : ''}</span>
                                 </div>
                             ))}
@@ -381,7 +425,7 @@ export const AdminPage: FC = () => {
                         <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'center' }}>
                             <input style={inputStyle} placeholder="Search username or Telegram ID" value={q}
                                 onChange={e => setQ(e.target.value)} />
-                            <Button onClick={() => loadUsers(q)}>Search</Button>
+                            <Button onClick={() => { setUsersLimit(50); void loadUsers(q, 50); }}>Search</Button>
                         </div>
                         {users.map(u => (
                             <button key={u.telegram_id} onClick={() => pickUser(u.telegram_id)} style={{
@@ -397,6 +441,12 @@ export const AdminPage: FC = () => {
                                 <span className="tnum">{u.balance.toLocaleString()} CSM</span>
                             </button>
                         ))}
+                        {users.length >= usersLimit && (
+                            <Button variant="outline" style={{ width: '100%', marginTop: 10 }}
+                                onClick={() => { const n = usersLimit + 50; setUsersLimit(n); void loadUsers(q, n); }}>
+                                Show more players
+                            </Button>
+                        )}
                         {selected && (
                             <div style={{ marginTop: 12, padding: 12, borderRadius: 12, background: 'rgba(245,197,24,0.06)', border: '1px solid rgba(245,197,24,0.25)' }}>
                                 <div style={{ fontWeight: 800 }}>
@@ -413,10 +463,13 @@ export const AdminPage: FC = () => {
 
                                 <span style={labelStyle}>Adjust balance (CSM, ±1,000,000)</span>
                                 <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                                    <input style={inputStyle} type="number" value={adjustAmt} onChange={e => setAdjustAmt(e.target.value)} />
-                                    <Button onClick={applyAdjust}>Adjust</Button>
+                                    <span style={labelStyle}>Reason (required, written to the audit log)</span>
+                                    <input style={inputStyle} type="text" value={adjustReason} onChange={e => setAdjustReason(e.target.value)} />
                                 </div>
-
+                                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                                    <input style={inputStyle} type="number" value={adjustAmt} onChange={e => setAdjustAmt(e.target.value)} />
+                                    <Button onClick={applyAdjust} disabled={!adjustReason.trim()}>Adjust</Button>
+                                </div>
                                 <span style={labelStyle}>Set level (1–100)</span>
                                 <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                                     <input style={inputStyle} type="number" value={levelVal} onChange={e => setLevelVal(e.target.value)} />
@@ -507,7 +560,7 @@ export const AdminPage: FC = () => {
                 {section === 'tasks' && (
                     <>
                         <div className="p2e-card" style={{ marginBottom: 12 }}>
-                            <div style={{ fontWeight: 750, marginBottom: 10 }}>Create a task</div>
+                            <div style={{ fontWeight: 750, marginBottom: 10 }}>{editingId !== null ? 'Edit task' : 'Create a task'}</div>
                             <span style={labelStyle}>Title</span>
                             <input style={{ ...inputStyle, marginBottom: 8 }} value={newTask.title}
                                 onChange={e => setNewTask({ ...newTask, title: e.target.value })} placeholder="e.g. Mine 10 times" />
@@ -557,7 +610,14 @@ export const AdminPage: FC = () => {
                                         onChange={e => setNewTask({ ...newTask, link_url: e.target.value })} placeholder="https://t.me/…" />
                                 </div>
                             </div>
-                            <Button className="w-full" onClick={createTask}>Create task</Button>
+                            <Button className="w-full" onClick={createTask}>{editingId !== null ? 'Save changes' : 'Create task'}</Button>
+                            {editingId !== null && (
+                                <button onClick={() => { setEditingId(null); setNewTask({ ...newTask, title: '', description: '' }); }} style={{
+                                    width: '100%', marginTop: 8, padding: '9px 14px', borderRadius: 10, cursor: 'pointer',
+                                    fontSize: 13, fontWeight: 700, color: '#cbd5e1', background: 'rgba(148,163,184,0.08)',
+                                    border: '1px solid rgba(148,163,184,0.25)',
+                                }}>Cancel edit</button>
+                            )}
                         </div>
                         <div className="p2e-card">
                             <div style={{ fontWeight: 600, fontSize: 15, letterSpacing: '-0.01em', marginBottom: 10 }}>All tasks</div>
@@ -574,6 +634,11 @@ export const AdminPage: FC = () => {
                                         color: t.is_active ? '#4ade80' : 'inherit',
                                         background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)',
                                     }}>{t.is_active ? 'Live' : 'Hidden'}</button>
+                                    <button onClick={() => startEdit(t)} style={{
+                                        padding: '5px 10px', borderRadius: 999, cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
+                                        color: '#cbd5e1', background: 'rgba(148,163,184,0.08)', border: '1px solid rgba(148,163,184,0.28)',
+                                        marginRight: 6,
+                                    }}>Edit</button>
                                     <button onClick={() => removeTask(t)} style={{
                                         padding: '5px 10px', borderRadius: 999, cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
                                         color: '#f87171', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)',
@@ -618,6 +683,22 @@ export const AdminPage: FC = () => {
                             <textarea style={{ ...inputStyle, minHeight: 74, resize: 'vertical' }} maxLength={280}
                                 value={bannerText} onChange={e => setBannerText(e.target.value)}
                                 placeholder="e.g. Double mining weekend — crew payouts boosted!" />
+                            <div style={{
+                                marginTop: 10, padding: '10px 12px', borderRadius: 12,
+                                background: '#06070c', border: '1px solid rgba(245,197,24,0.35)',
+                            }}>
+                                <div style={{
+                                    fontSize: 10.5, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
+                                    color: 'var(--sh-gold)', marginBottom: 6,
+                                }}>
+                                    Announcement
+                                </div>
+                                <div style={{ fontSize: 13.5, lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                    {bannerText.trim()
+                                        ? bannerText
+                                        : <span style={{ opacity: 0.5 }}>Nothing to preview yet.</span>}
+                                </div>
+                            </div>
                             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                                 <Button style={{ flex: 1 }} onClick={() => saveBanner(bannerText)}>Publish</Button>
                                 <Button style={{ flex: 1 }} variant="outline" onClick={() => { setBannerText(''); saveBanner(''); }}>Clear</Button>

@@ -1,0 +1,33 @@
+.sh-skeleton {
+  position: relative;
+  display: block;
+  background: #14161f;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sh-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(245, 197, 24, 0) 0%,
+    rgba(245, 197, 24, 0.06) 50%,
+    rgba(245, 197, 24, 0) 100%
+  );
+  animation: sh-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes sh-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-skeleton::after {
+    animation: none;
+  }
+}
